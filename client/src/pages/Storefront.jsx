@@ -26,7 +26,8 @@ import {
   Tag,
   SlidersHorizontal,
   MessageSquare,
-  Send
+  Send,
+  Check
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -34,15 +35,34 @@ export default function Storefront() {
   const { user, token, logout } = useAuth();
   const navigate = useNavigate();
 
-  // Catalog & Search State
+  // Floating Toast Notifications System
+  const [toasts, setToasts] = useState([]);
+  const showToast = ({ type = 'success', title, message, icon }) => {
+    const id = Date.now() + Math.random().toString(36).substring(2, 6);
+    setToasts(prev => [...prev, { id, type, title, message, icon }]);
+    setTimeout(() => {
+      setToasts(prev => prev.filter(t => t.id !== id));
+    }, 3200);
+  };
+  const removeToast = (id) => {
+    setToasts(prev => prev.filter(t => t.id !== id));
+  };
+
+  // Catalog & Search State with Debouncing & Auto-Suggest
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const [isSuggestOpen, setIsSuggestOpen] = useState(false);
+  const [suggestResults, setSuggestResults] = useState([]);
   const [sortBy, setSortBy] = useState('');
   const [searchSource, setSearchSource] = useState('database-engine');
   const [isLoading, setIsLoading] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
+
+  // Optimistic UI State
+  const [optimisticAddingId, setOptimisticAddingId] = useState(null);
 
   // Reviews State
   const [productReviews, setProductReviews] = useState([]);
@@ -89,6 +109,32 @@ export default function Storefront() {
     fetchProducts();
     fetchCart();
   }, []);
+
+  // 280ms Debounced Search Bar - avoids hitting the DB on every keystroke
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchQuery(searchInput);
+      fetchProducts(searchInput, selectedCategory, sortBy);
+    }, 280);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
+  // Real-time Auto-Suggest Dropdown Filter
+  useEffect(() => {
+    if (searchInput.trim().length > 0) {
+      const q = searchInput.toLowerCase();
+      const matches = products.filter(p =>
+        p.title.toLowerCase().includes(q) ||
+        p.category.toLowerCase().includes(q) ||
+        (p.vendor?.storeName && p.vendor.storeName.toLowerCase().includes(q))
+      ).slice(0, 5);
+      setSuggestResults(matches);
+      setIsSuggestOpen(matches.length > 0);
+    } else {
+      setSuggestResults([]);
+      setIsSuggestOpen(false);
+    }
+  }, [searchInput, products]);
 
   const fetchProducts = async (query = searchQuery, category = selectedCategory, sort = sortBy) => {
     setIsLoading(true);
@@ -162,6 +208,12 @@ export default function Storefront() {
         setReviewComment('');
         fetchProductReviews(selectedProduct._id);
         fetchProducts(searchQuery, selectedCategory, sortBy);
+        showToast({
+          type: 'success',
+          title: 'Review Published',
+          message: 'Thank you! Your verified rating is now live.',
+          icon: Star
+        });
         setSelectedProduct(prev => ({
           ...prev,
           ratingAverage: data.data.ratingAverage,
@@ -196,6 +248,12 @@ export default function Storefront() {
         setAppliedCoupon(data.data);
         setCouponInput('');
         setCouponError('');
+        showToast({
+          type: 'success',
+          title: 'Coupon Applied',
+          message: `Promo code ${data.data.code} applied: saved ₹${data.data.discountAmount}!`,
+          icon: Tag
+        });
       } else {
         setCouponError(data.message || 'Invalid coupon.');
       }
@@ -209,6 +267,12 @@ export default function Storefront() {
   const handleRemoveCoupon = () => {
     setAppliedCoupon(null);
     setCouponError('');
+    showToast({
+      type: 'info',
+      title: 'Coupon Removed',
+      message: 'Promo discount was removed from your order.',
+      icon: Tag
+    });
   };
 
   const fetchCart = async () => {
@@ -226,6 +290,27 @@ export default function Storefront() {
 
   const handleAddToCart = async (product, e) => {
     if (e) e.stopPropagation();
+
+    const displayPrice = product.discountPrice > 0 ? product.discountPrice : product.price;
+
+    // 1. Optimistic UI Instant State
+    setOptimisticAddingId(product._id);
+    setTimeout(() => setOptimisticAddingId(null), 1200);
+
+    const prevCart = { ...cart };
+    setCart(prev => ({
+      ...prev,
+      itemCount: (prev.itemCount || 0) + 1,
+      subtotal: (prev.subtotal || 0) + displayPrice
+    }));
+
+    showToast({
+      type: 'success',
+      title: 'Added to Bag',
+      message: `${product.title} has been added to your shopping bag.`,
+      icon: ShoppingBag
+    });
+
     try {
       const headers = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
@@ -238,10 +323,25 @@ export default function Storefront() {
       const data = await res.json();
       if (data.success) {
         await fetchCart();
-        setIsCartOpen(true);
+      } else {
+        // Rollback optimistic update
+        setCart(prevCart);
+        showToast({
+          type: 'error',
+          title: 'Bag Error',
+          message: data.message || 'Could not add item to bag.',
+          icon: AlertCircle
+        });
       }
     } catch (err) {
       console.error('Add to cart failed:', err);
+      setCart(prevCart);
+      showToast({
+        type: 'error',
+        title: 'Connection Issue',
+        message: 'Could not communicate with bag server.',
+        icon: AlertCircle
+      });
     }
   };
 
@@ -296,6 +396,12 @@ export default function Storefront() {
       cvv: '888'
     });
     setCheckoutError('');
+    showToast({
+      type: 'info',
+      title: 'Demo Card Loaded',
+      message: 'Test card details populated. Ready for instant authorization.',
+      icon: CreditCard
+    });
   };
 
   const handleCheckout = async () => {
@@ -359,6 +465,12 @@ export default function Storefront() {
         confetti({ particleCount: 100, spread: 60, origin: { y: 0.6 } });
         fetchCart();
         fetchProducts();
+        showToast({
+          type: 'success',
+          title: 'Order Confirmed',
+          message: `Order #${data.data.orderNumber} successfully processed!`,
+          icon: CheckCircle
+        });
       } else {
         setCheckoutError(data.message || 'Payment processing declined. Please try again.');
       }
@@ -385,19 +497,74 @@ export default function Storefront() {
             <span>MarketPulse</span>
           </div>
 
-          {/* Spotlight Search */}
-          <div className="search-wrapper">
+          {/* Spotlight Search with Debouncing & Auto-Suggest */}
+          <div className="search-wrapper" style={{ position: 'relative' }}>
             <Search className="search-icon" size={15} />
             <input
               type="text"
               className="search-input"
-              placeholder="Search products, categories, creators..."
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                fetchProducts(e.target.value, selectedCategory);
-              }}
+              placeholder="Search products, creators, categories..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              onFocus={() => { if (searchInput.trim()) setIsSuggestOpen(true); }}
             />
+            {searchInput && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchInput('');
+                  setSearchQuery('');
+                  setIsSuggestOpen(false);
+                  fetchProducts('', selectedCategory, sortBy);
+                }}
+                style={{
+                  position: 'absolute',
+                  right: 12,
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--apple-secondary)',
+                  cursor: 'pointer',
+                  padding: 2
+                }}
+                title="Clear search"
+              >
+                <X size={13} />
+              </button>
+            )}
+
+            {/* Auto-Suggest Floating Dropdown */}
+            {isSuggestOpen && suggestResults.length > 0 && (
+              <div className="autosuggest-dropdown">
+                <div style={{ padding: '8px 14px 4px', fontSize: '0.72rem', color: 'var(--apple-tertiary)', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 600 }}>
+                  Suggested Matches ({suggestResults.length})
+                </div>
+                {suggestResults.map((item) => (
+                  <div
+                    key={item._id}
+                    className="autosuggest-item"
+                    onClick={() => {
+                      setIsSuggestOpen(false);
+                      handleOpenProductDetail(item);
+                    }}
+                  >
+                    <img src={item.images[0]} alt={item.title} style={{ width: 34, height: 34, borderRadius: 6, objectFit: 'cover' }} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: '0.82rem', fontWeight: 500, color: 'var(--apple-text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {item.title}
+                      </div>
+                      <div style={{ fontSize: '0.7rem', color: 'var(--apple-secondary)' }}>
+                        {item.category} • {item.vendor?.storeName || 'Merchant'}
+                      </div>
+                    </div>
+                    <div style={{ fontSize: '0.84rem', fontWeight: 600, color: 'var(--apple-green)' }}>
+                      ₹{(item.discountPrice > 0 ? item.discountPrice : item.price).toLocaleString()}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Cupertino Controls */}
@@ -556,80 +723,144 @@ export default function Storefront() {
 
         {/* Product Gallery Grid */}
         <div className="product-grid">
-          {products.length === 0 ? (
-            <div className="apple-card" style={{ padding: 48, textAlign: 'center', color: 'var(--apple-secondary)', gridColumn: '1 / -1' }}>
-              <Package size={38} style={{ margin: '0 auto 14px', opacity: 0.3 }} />
-              <h3 style={{ fontSize: '1.15rem', fontWeight: 600, color: 'var(--apple-text)', marginBottom: 8 }}>
-                No marketplace listings yet
-              </h3>
-              <p style={{ fontSize: '0.86rem', marginBottom: 20 }}>
-                Merchants can publish products in Seller Central to make them available here.
-              </p>
-              <button className="btn btn-primary" onClick={() => navigate('/vendor')}>
-                Go to Seller Central to Publish First Product
-              </button>
-            </div>
-          ) : (
-            products.map((product) => {
-            const displayPrice = product.discountPrice > 0 ? product.discountPrice : product.price;
-            return (
-              <div
-                key={product._id}
-                className="product-card"
-                onClick={() => handleOpenProductDetail(product)}
-              >
-                <div className="product-img-wrap">
-                  <img src={product.images[0]} alt={product.title} className="product-img" />
-                  <div
-                    style={{
-                      position: 'absolute',
-                      top: 14,
-                      right: 14,
-                      background: 'rgba(0, 0, 0, 0.65)',
-                      backdropFilter: 'blur(10px)',
-                      padding: '4px 8px',
-                      borderRadius: 980,
-                      fontSize: '0.72rem',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 4,
-                      color: '#ffffff'
-                    }}
-                  >
-                    <Star size={11} fill="#ffd60a" color="#ffd60a" />
-                    <span>{product.ratingAverage}</span>
-                  </div>
-                </div>
-
-                <div className="product-body">
-                  <div className="product-vendor">
-                    <Store size={13} />
-                    <span>{product.vendor?.storeName || 'Verified Store'}</span>
-                  </div>
-
-                  <h3 className="product-title">{product.title}</h3>
-
-                  <p className="product-desc">{product.description}</p>
-
-                  <div className="product-footer">
-                    <div>
-                      <span className="price-main">₹{displayPrice.toLocaleString()}</span>
-                      {product.discountPrice > 0 && (
-                        <span className="price-strike">₹{product.price.toLocaleString()}</span>
-                      )}
-                    </div>
-
-                    <button
-                      className="btn btn-primary"
-                      onClick={(e) => handleAddToCart(product, e)}
-                    >
-                      Add to Cart
-                    </button>
+          {isLoading ? (
+            /* 1. Skeleton Loading States (Not Spinners!) */
+            Array.from({ length: 6 }).map((_, index) => (
+              <div key={index} className="skeleton-card">
+                <div className="skeleton-box" style={{ width: '100%', height: 240 }} />
+                <div style={{ padding: 22, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  <div className="skeleton-box" style={{ width: '35%', height: 14 }} />
+                  <div className="skeleton-box" style={{ width: '80%', height: 20 }} />
+                  <div className="skeleton-box" style={{ width: '100%', height: 36 }} />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 }}>
+                    <div className="skeleton-box" style={{ width: '40%', height: 24 }} />
+                    <div className="skeleton-box" style={{ width: '32%', height: 32, borderRadius: 980 }} />
                   </div>
                 </div>
               </div>
-            );
-          }))}
+            ))
+          ) : products.length === 0 ? (
+            /* 5. Thoughtful Catalog Empty State */
+            <div className="apple-card" style={{ padding: 56, textAlign: 'center', color: 'var(--apple-secondary)', gridColumn: '1 / -1' }}>
+              <div style={{
+                width: 68,
+                height: 68,
+                borderRadius: '50%',
+                background: 'rgba(0, 113, 227, 0.1)',
+                border: '1px solid rgba(0, 113, 227, 0.25)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 18px',
+                color: 'var(--apple-blue)',
+                boxShadow: '0 0 32px rgba(0, 113, 227, 0.15)'
+              }}>
+                <Search size={30} />
+              </div>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--apple-text)', marginBottom: 8 }}>
+                {searchQuery ? `No listings found matching "${searchQuery}"` : 'No products in this category'}
+              </h3>
+              <p style={{ fontSize: '0.88rem', color: 'var(--apple-secondary)', maxWidth: 460, margin: '0 auto 24px', lineHeight: 1.55 }}>
+                {searchQuery || selectedCategory
+                  ? 'We couldn\'t find any matches. Try adjusting your search query, choosing a different category, or clearing your active filters.'
+                  : 'Merchants can publish products in Seller Central to make them available to buyers.'}
+              </p>
+              <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+                {(searchQuery || selectedCategory) && (
+                  <button
+                    className="btn btn-secondary"
+                    onClick={() => {
+                      setSearchInput('');
+                      setSearchQuery('');
+                      setSelectedCategory('');
+                      fetchProducts('', '', sortBy);
+                    }}
+                  >
+                    Clear Filters & Reset
+                  </button>
+                )}
+                <button className="btn btn-primary" onClick={() => navigate('/vendor')}>
+                  Go to Seller Central
+                </button>
+              </div>
+            </div>
+          ) : (
+            products.map((product) => {
+              const displayPrice = product.discountPrice > 0 ? product.discountPrice : product.price;
+              const isOptimisticAdded = optimisticAddingId === product._id;
+              return (
+                <div
+                  key={product._id}
+                  className="product-card"
+                  onClick={() => handleOpenProductDetail(product)}
+                >
+                  <div className="product-img-wrap">
+                    <img src={product.images[0]} alt={product.title} className="product-img" />
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: 14,
+                        right: 14,
+                        background: 'rgba(0, 0, 0, 0.65)',
+                        backdropFilter: 'blur(10px)',
+                        padding: '4px 8px',
+                        borderRadius: 980,
+                        fontSize: '0.72rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 4,
+                        color: '#ffffff'
+                      }}
+                    >
+                      <Star size={11} fill="#ffd60a" color="#ffd60a" />
+                      <span>{product.ratingAverage}</span>
+                    </div>
+                  </div>
+
+                  <div className="product-body">
+                    <div className="product-vendor">
+                      <Store size={13} />
+                      <span>{product.vendor?.storeName || 'Verified Store'}</span>
+                    </div>
+
+                    <h3 className="product-title">{product.title}</h3>
+
+                    <p className="product-desc">{product.description}</p>
+
+                    <div className="product-footer">
+                      <div>
+                        <span className="price-main">₹{displayPrice.toLocaleString()}</span>
+                        {product.discountPrice > 0 && (
+                          <span className="price-strike">₹{product.price.toLocaleString()}</span>
+                        )}
+                      </div>
+
+                      {/* 2. Optimistic UI Updates on Add to Bag */}
+                      <button
+                        className="btn btn-primary"
+                        style={{
+                          padding: '7px 16px',
+                          fontSize: '0.8rem',
+                          background: isOptimisticAdded ? 'var(--apple-green)' : 'var(--apple-blue)',
+                          transition: 'var(--transition-apple)'
+                        }}
+                        disabled={isOptimisticAdded}
+                        onClick={(e) => handleAddToCart(product, e)}
+                      >
+                        {isOptimisticAdded ? (
+                          <>
+                            <Check size={14} /> Added!
+                          </>
+                        ) : (
+                          'Add to Bag'
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
       </main>
 
@@ -654,9 +885,38 @@ export default function Storefront() {
 
             <div style={{ flex: 1, overflowY: 'auto', padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
               {cart.items.length === 0 ? (
-                <div style={{ textAlign: 'center', margin: 'auto', color: 'var(--apple-secondary)' }}>
-                  <ShoppingBag size={42} style={{ margin: '0 auto 14px', opacity: 0.3 }} />
-                  <p style={{ fontSize: '0.9rem' }}>Your bag is empty.</p>
+                <div style={{ textAlign: 'center', margin: 'auto', padding: '32px 16px', color: 'var(--apple-secondary)' }}>
+                  <div style={{
+                    width: 78,
+                    height: 78,
+                    borderRadius: '50%',
+                    background: 'rgba(0, 113, 227, 0.08)',
+                    border: '1px solid rgba(0, 113, 227, 0.22)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    margin: '0 auto 18px',
+                    color: 'var(--apple-blue)',
+                    boxShadow: '0 0 32px rgba(0, 113, 227, 0.15)'
+                  }}>
+                    <ShoppingBag size={34} />
+                  </div>
+                  <h3 style={{ fontSize: '1.2rem', fontWeight: 600, color: 'var(--apple-text)', marginBottom: 8 }}>
+                    Your Bag is Empty
+                  </h3>
+                  <p style={{ fontSize: '0.86rem', color: 'var(--apple-secondary)', maxWidth: 280, margin: '0 auto 24px', lineHeight: 1.55 }}>
+                    You haven't added any products yet. Browse creator goods from independent verified merchants.
+                  </p>
+                  <button
+                    className="btn btn-primary"
+                    style={{ padding: '10px 24px', fontSize: '0.9rem' }}
+                    onClick={() => {
+                      setIsCartOpen(false);
+                      window.scrollTo({ top: 350, behavior: 'smooth' });
+                    }}
+                  >
+                    Continue Shopping
+                  </button>
                 </div>
               ) : (
                 cart.items.map((item) => (
@@ -1371,6 +1631,40 @@ export default function Storefront() {
           © 2026 MarketPulse Inc. All rights reserved. • Privacy Policy • Terms of Service • Trust & Security
         </p>
       </footer>
+
+      {/* 4. Floating Glassmorphism Toast Notification Stack */}
+      <div className="toast-container">
+        {toasts.map((toast) => {
+          const Icon = toast.icon || CheckCircle;
+          return (
+            <div key={toast.id} className="toast-item">
+              <div style={{
+                color: toast.type === 'error' ? 'var(--apple-red)' : toast.type === 'info' ? 'var(--apple-blue)' : 'var(--apple-green)',
+                marginTop: 2,
+                display: 'flex'
+              }}>
+                <Icon size={17} />
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontWeight: 600, fontSize: '0.84rem', color: 'var(--apple-text)', marginBottom: 2 }}>
+                  {toast.title}
+                </div>
+                <div style={{ fontSize: '0.78rem', color: 'var(--apple-secondary)', lineHeight: 1.4 }}>
+                  {toast.message}
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => removeToast(toast.id)}
+                style={{ background: 'none', border: 'none', color: 'var(--apple-secondary)', cursor: 'pointer', padding: 2 }}
+                title="Dismiss"
+              >
+                <X size={14} />
+              </button>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
