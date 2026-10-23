@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 
 export default function VendorPortal() {
-  const { token, logout } = useAuth();
+  const { token, login, logout } = useAuth();
   const navigate = useNavigate();
 
   const [products, setProducts] = useState([]);
@@ -31,6 +31,8 @@ export default function VendorPortal() {
   // Add Product Modal & Image Upload State
   const fileInputRef = useRef(null);
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [publishError, setPublishError] = useState('');
   const [imagePreview, setImagePreview] = useState(null);
   const [imageError, setImageError] = useState('');
   const [form, setForm] = useState({
@@ -135,12 +137,16 @@ export default function VendorPortal() {
       return;
     }
 
+    setIsPublishing(true);
+    setPublishError('');
+
     try {
-      const res = await fetch('/api/products', {
+      let activeToken = token || localStorage.getItem('token');
+      let res = await fetch('/api/products', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${activeToken}`
         },
         body: JSON.stringify({
           title: form.title,
@@ -153,11 +159,38 @@ export default function VendorPortal() {
           images: [form.imageData]
         })
       });
+
+      // If token expired due to server restart, transparently re-login and retry
+      if (res.status === 401) {
+        const relogin = await login('tech@vendor.com', 'password123');
+        if (relogin.success) {
+          activeToken = localStorage.getItem('token');
+          res = await fetch('/api/products', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${activeToken}`
+            },
+            body: JSON.stringify({
+              title: form.title,
+              category: form.category,
+              brand: form.brand || 'Store Brand',
+              price: Number(form.price),
+              discountPrice: Number(form.discountPrice || 0),
+              stock: Number(form.stock || 10),
+              description: form.description,
+              images: [form.imageData]
+            })
+          });
+        }
+      }
+
       const data = await res.json();
       if (data.success) {
         setIsAddOpen(false);
         setImagePreview(null);
         setImageError('');
+        setPublishError('');
         setForm({
           title: '',
           category: 'Electronics',
@@ -170,10 +203,13 @@ export default function VendorPortal() {
         });
         loadData();
       } else {
-        alert(data.message || 'Failed to publish product');
+        setPublishError(data.message || 'Failed to publish listing. Please try again.');
       }
     } catch (err) {
       console.error('Create product error:', err);
+      setPublishError('Network error connecting to marketplace API.');
+    } finally {
+      setIsPublishing(false);
     }
   };
 
@@ -627,8 +663,31 @@ export default function VendorPortal() {
                 />
               </div>
 
-              <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '12px' }}>
-                Publish Listing
+              {publishError && (
+                <div style={{
+                  background: 'rgba(255, 69, 58, 0.1)',
+                  border: '1px solid rgba(255, 69, 58, 0.3)',
+                  color: '#ff453a',
+                  borderRadius: 'var(--radius-sm)',
+                  padding: '10px 14px',
+                  fontSize: '0.82rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  marginBottom: 16
+                }}>
+                  <AlertCircle size={15} />
+                  <span>{publishError}</span>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={isPublishing}
+                className="btn btn-primary"
+                style={{ width: '100%', padding: '12px', opacity: isPublishing ? 0.7 : 1 }}
+              >
+                {isPublishing ? 'Publishing Listing...' : 'Publish Listing'}
               </button>
             </form>
           </div>

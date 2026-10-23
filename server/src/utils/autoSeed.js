@@ -23,8 +23,14 @@ export const resetCleanSlate = async () => {
       // ignore redis key error
     }
 
+    const ADMIN_ID = '65f000000000000000000001';
+    const VENDOR_USER_ID = '65f000000000000000000002';
+    const VENDOR_PROFILE_ID = '65f000000000000000000003';
+    const CUSTOMER_ID = '65f000000000000000000004';
+
     // 1. Clean Super Admin Account
     await User.create({
+      _id: ADMIN_ID,
       name: 'Platform Administrator',
       email: 'admin@marketplace.com',
       password: 'password123',
@@ -34,6 +40,7 @@ export const resetCleanSlate = async () => {
 
     // 2. Clean Vendor Account (TechHub Electronics with 0 balance & 0 products)
     const vendorUser = await User.create({
+      _id: VENDOR_USER_ID,
       name: 'Rohan Sharma',
       email: 'tech@vendor.com',
       password: 'password123',
@@ -42,6 +49,7 @@ export const resetCleanSlate = async () => {
     });
 
     const vendor = await Vendor.create({
+      _id: VENDOR_PROFILE_ID,
       user: vendorUser._id,
       storeName: 'TechHub Electronics',
       description: 'Authorized retailer for audio, wearables, and electronics.',
@@ -57,6 +65,7 @@ export const resetCleanSlate = async () => {
 
     // 3. Clean Customer Account (Alex Johnson with 0 orders)
     await User.create({
+      _id: CUSTOMER_ID,
       name: 'Alex Johnson',
       email: 'customer@example.com',
       password: 'password123',
@@ -74,7 +83,7 @@ export const resetCleanSlate = async () => {
       ]
     });
 
-    console.log('[CleanSlate] Clean accounts initialized with ₹0 balance, 0 products, 0 orders.');
+    console.log('[CleanSlate] Clean accounts initialized with deterministic IDs, ₹0 balance, 0 products, 0 orders.');
   } catch (err) {
     console.error(`[CleanSlate Error] ${err.message}`);
   }
