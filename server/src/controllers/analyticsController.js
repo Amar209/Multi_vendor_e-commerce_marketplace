@@ -32,11 +32,12 @@ export const getAdminAnalytics = async (req, res) => {
       totalSubtotal: 0
     };
 
-    // Recent orders
+    // Recent orders with customer and vendor details
     const recentOrders = await Order.find()
-      .populate('customer', 'name email')
+      .populate('customer', 'name email phone')
+      .populate('items.vendor', 'storeName')
       .sort({ createdAt: -1 })
-      .limit(5);
+      .limit(25);
 
     res.status(200).json({
       success: true,
@@ -48,7 +49,8 @@ export const getAdminAnalytics = async (req, res) => {
           totalProducts,
           totalOrders,
           grossMerchandiseValue: stats.grossMerchandiseValue,
-          platformCommissions: stats.platformCommissions
+          platformCommissions: stats.platformCommissions,
+          netVendorRemittance: Math.max(0, stats.grossMerchandiseValue - stats.platformCommissions)
         },
         recentOrders
       }
