@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -14,7 +14,9 @@ import {
   X,
   Trash2,
   Layers,
-  RotateCcw
+  RotateCcw,
+  UploadCloud,
+  AlertCircle
 } from 'lucide-react';
 
 export default function VendorPortal() {
@@ -26,8 +28,11 @@ export default function VendorPortal() {
   const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Add Product Modal
+  // Add Product Modal & Image Upload State
+  const fileInputRef = useRef(null);
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [imageError, setImageError] = useState('');
   const [form, setForm] = useState({
     title: '',
     category: 'Electronics',
@@ -36,7 +41,7 @@ export default function VendorPortal() {
     discountPrice: '',
     stock: 10,
     description: '',
-    imageUrl: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800'
+    imageData: null
   });
 
   const loadData = async () => {
@@ -73,8 +78,63 @@ export default function VendorPortal() {
     loadData();
   }, [token]);
 
+  const handleImageFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      setImageError('Please select a valid image file (PNG, JPG, WebP).');
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      setImageError('Image must be under 10MB.');
+      return;
+    }
+
+    setImageError('');
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new window.Image();
+      img.onload = () => {
+        // Optimize & scale down via canvas to keep high quality while minimizing payload
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+        const maxDimension = 1200;
+
+        if (width > maxDimension || height > maxDimension) {
+          if (width > height) {
+            height = Math.round((height * maxDimension) / width);
+            width = maxDimension;
+          } else {
+            width = Math.round((width * maxDimension) / height);
+            height = maxDimension;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        const optimizedDataUrl = canvas.toDataURL('image/jpeg', 0.88);
+        setImagePreview(optimizedDataUrl);
+        setForm((prev) => ({ ...prev, imageData: optimizedDataUrl }));
+      };
+      img.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleCreateProduct = async (e) => {
     e.preventDefault();
+
+    if (!form.imageData) {
+      setImageError('Please upload a product photo from your device.');
+      return;
+    }
+
     try {
       const res = await fetch('/api/products', {
         method: 'POST',
@@ -90,12 +150,24 @@ export default function VendorPortal() {
           discountPrice: Number(form.discountPrice || 0),
           stock: Number(form.stock || 10),
           description: form.description,
-          images: [form.imageUrl]
+          images: [form.imageData]
         })
       });
       const data = await res.json();
       if (data.success) {
         setIsAddOpen(false);
+        setImagePreview(null);
+        setImageError('');
+        setForm({
+          title: '',
+          category: 'Electronics',
+          brand: '',
+          price: '',
+          discountPrice: '',
+          stock: 10,
+          description: '',
+          imageData: null
+        });
         loadData();
       } else {
         alert(data.message || 'Failed to publish product');
@@ -420,6 +492,8 @@ export default function VendorPortal() {
                     <option value="Electronics">Electronics</option>
                     <option value="Fashion">Fashion</option>
                     <option value="Footwear">Footwear</option>
+                    <option value="Home & Living">Home & Living</option>
+                    <option value="Accessories">Accessories</option>
                   </select>
                 </div>
 
@@ -471,15 +545,75 @@ export default function VendorPortal() {
                 </div>
               </div>
 
+              {/* Product Image File Upload */}
               <div className="form-group">
-                <label className="form-label">Product Image URL</label>
-                <input
-                  type="url"
-                  required
-                  className="form-input"
-                  value={form.imageUrl}
-                  onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
-                />
+                <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>Product Photo Upload</span>
+                  <span style={{ fontSize: '0.74rem', color: 'var(--apple-secondary)', fontWeight: 400 }}>PNG, JPG, WebP (up to 10MB)</span>
+                </label>
+
+                {!imagePreview ? (
+                  <div
+                    className="image-upload-dropzone"
+                    onClick={() => fileInputRef.current?.click()}
+                    onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                        handleImageFileChange({ target: { files: e.dataTransfer.files } });
+                      }
+                    }}
+                  >
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      accept="image/*"
+                      style={{ display: 'none' }}
+                      onChange={handleImageFileChange}
+                    />
+                    <div style={{
+                      width: 44,
+                      height: 44,
+                      borderRadius: '50%',
+                      background: 'rgba(255, 255, 255, 0.08)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: 'var(--apple-blue)'
+                    }}>
+                      <UploadCloud size={22} />
+                    </div>
+                    <div style={{ fontSize: '0.88rem', fontWeight: 500, color: 'var(--apple-text)' }}>
+                      Click to browse or drop product photo here
+                    </div>
+                    <div style={{ fontSize: '0.76rem', color: 'var(--apple-tertiary)' }}>
+                      Photo will be stored directly with this listing
+                    </div>
+                  </div>
+                ) : (
+                  <div className="image-upload-preview">
+                    <img src={imagePreview} alt="Product upload preview" />
+                    <button
+                      type="button"
+                      className="image-upload-remove"
+                      onClick={() => {
+                        setImagePreview(null);
+                        setForm((prev) => ({ ...prev, imageData: null }));
+                        if (fileInputRef.current) fileInputRef.current.value = '';
+                      }}
+                      title="Remove photo"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                )}
+
+                {imageError && (
+                  <div style={{ color: '#ff453a', fontSize: '0.78rem', marginTop: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <AlertCircle size={13} /> {imageError}
+                  </div>
+                )}
               </div>
 
               <div className="form-group">
