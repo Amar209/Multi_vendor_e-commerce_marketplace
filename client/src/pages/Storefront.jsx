@@ -200,23 +200,6 @@ export default function Storefront() {
                 fetchProducts(e.target.value, selectedCategory);
               }}
             />
-            {searchQuery && (
-              <span
-                style={{
-                  position: 'absolute',
-                  right: 14,
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  fontSize: '0.72rem',
-                  color: 'var(--apple-secondary)',
-                  background: 'rgba(255, 255, 255, 0.08)',
-                  padding: '2px 8px',
-                  borderRadius: 980
-                }}
-              >
-                {searchSource === 'elasticsearch' ? 'Elasticsearch' : 'Instant Search'}
-              </span>
-            )}
           </div>
 
           {/* Cupertino Controls */}
@@ -303,7 +286,7 @@ export default function Storefront() {
             Engineered for craft.<br />Delivered direct from creators.
           </h1>
           <p className="apple-hero-sub">
-            Discover verified merchant storefronts, sub-millisecond Redis cart caching, and automated split payments with zero platform markup.
+            Discover verified independent merchant storefronts, fast checkout, and seamless order delivery direct from creators.
           </p>
 
           <div className="hero-pills">
@@ -311,7 +294,7 @@ export default function Storefront() {
               <CheckCircle size={14} color="var(--apple-green)" /> Verified Independent Merchants
             </div>
             <div className="hero-pill-item">
-              <Clock size={14} color="#2997ff" /> Real-Time Redis Cart Store
+              <Clock size={14} color="#2997ff" /> Seamless Cart Checkout
             </div>
             <div className="hero-pill-item">
               <CreditCard size={14} color="var(--apple-amber)" /> Instant Multi-Vendor Split Transfers
@@ -418,7 +401,7 @@ export default function Storefront() {
             <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--apple-hairline)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
                 <h3 style={{ fontSize: '1.15rem', fontWeight: 600 }}>Your Bag</h3>
-                <span style={{ fontSize: '0.75rem', color: 'var(--apple-secondary)' }}>Redis Fast In-Memory Cache</span>
+                <span style={{ fontSize: '0.75rem', color: 'var(--apple-secondary)' }}>Ready for instant checkout</span>
               </div>
               <button
                 style={{ background: 'transparent', border: 'none', color: 'var(--apple-secondary)', cursor: 'pointer' }}
@@ -549,11 +532,11 @@ export default function Storefront() {
                   </div>
                 </div>
 
-                {/* Apple Pay Test Card Strip */}
+                {/* Secure Card Payment Strip */}
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: 'rgba(255, 255, 255, 0.04)', borderRadius: 10, border: '1px solid var(--apple-hairline)', marginBottom: 24 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: '0.88rem' }}>
                     <CreditCard size={18} color="var(--apple-secondary)" />
-                    <span>Apple Pay Sandbox Card</span>
+                    <span>Credit / Debit Card (Simulated)</span>
                   </div>
                   <span style={{ color: 'var(--apple-green)', fontSize: '0.78rem', fontWeight: 600 }}>•••• 4242</span>
                 </div>
@@ -665,7 +648,7 @@ export default function Storefront() {
           <a href="/my-orders" style={{ color: 'var(--apple-secondary)', textDecoration: 'none' }}>My Bag & Orders</a>
         </div>
         <p style={{ color: 'var(--apple-tertiary)', fontSize: '0.78rem' }}>
-          MarketPulse Platform • Powered by Express, MongoDB, Redis, and Stripe Connect.
+          © 2026 MarketPulse Inc. All rights reserved. • Privacy Policy • Terms of Service • Trust & Security
         </p>
       </footer>
     </div>

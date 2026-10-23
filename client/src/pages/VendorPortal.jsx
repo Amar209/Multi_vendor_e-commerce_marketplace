@@ -225,7 +225,7 @@ export default function VendorPortal() {
               {products.length} Products
             </div>
             <div style={{ fontSize: '0.76rem', color: 'var(--apple-tertiary)', marginTop: 4 }}>
-              Indexed in Elasticsearch cluster
+              Active in live marketplace catalog
             </div>
           </div>
         </div>
