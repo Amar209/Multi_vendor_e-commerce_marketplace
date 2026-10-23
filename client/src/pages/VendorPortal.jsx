@@ -13,7 +13,8 @@ import {
   ExternalLink,
   X,
   Trash2,
-  Layers
+  Layers,
+  RotateCcw
 } from 'lucide-react';
 
 export default function VendorPortal() {
@@ -139,6 +140,16 @@ export default function VendorPortal() {
     }
   };
 
+  const handleResetDemo = async () => {
+    if (!window.confirm('Reset marketplace to clean slate (0 products, 0 orders)?')) return;
+    try {
+      await fetch('/api/auth/reset-clean', { method: 'POST' });
+      await loadData();
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--apple-bg)' }}>
       {/* Apple macOS style Navbar */}
@@ -154,6 +165,14 @@ export default function VendorPortal() {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <button
+              className="btn btn-secondary"
+              style={{ padding: '6px 12px', fontSize: '0.78rem', color: 'var(--apple-secondary)' }}
+              onClick={handleResetDemo}
+              title="Reset all products and orders to a clean demo slate"
+            >
+              <RotateCcw size={13} /> Reset Demo
+            </button>
             <button className="btn btn-secondary" style={{ padding: '6px 14px' }} onClick={() => navigate('/')}>
               <ExternalLink size={14} /> Storefront
             </button>

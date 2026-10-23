@@ -9,7 +9,8 @@ import {
   Package,
   FileText,
   LogOut,
-  ExternalLink
+  ExternalLink,
+  RotateCcw
 } from 'lucide-react';
 
 export default function AdminPortal() {
@@ -19,29 +20,39 @@ export default function AdminPortal() {
   const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const loadAdminData = async () => {
+    try {
+      const res = await fetch('/api/analytics/admin', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (data.success) {
+        setAnalytics(data.data);
+      }
+    } catch (err) {
+      console.error('Failed to load admin analytics:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (!token) {
       navigate('/login');
       return;
     }
-    const loadAdminData = async () => {
-      try {
-        const res = await fetch('/api/analytics/admin', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        const data = await res.json();
-        if (data.success) {
-          setAnalytics(data.data);
-        }
-      } catch (err) {
-        console.error('Failed to load admin analytics:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     loadAdminData();
   }, [token]);
+
+  const handleResetDemo = async () => {
+    if (!window.confirm('Reset marketplace to clean slate (0 products, 0 orders)?')) return;
+    try {
+      await fetch('/api/auth/reset-clean', { method: 'POST' });
+      await loadAdminData();
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--apple-bg)' }}>
@@ -58,6 +69,14 @@ export default function AdminPortal() {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <button
+              className="btn btn-secondary"
+              style={{ padding: '6px 12px', fontSize: '0.78rem', color: 'var(--apple-secondary)' }}
+              onClick={handleResetDemo}
+              title="Reset all products and orders to a clean demo slate"
+            >
+              <RotateCcw size={13} /> Reset Demo
+            </button>
             <button className="btn btn-secondary" style={{ padding: '6px 14px' }} onClick={() => navigate('/')}>
               <ExternalLink size={14} /> Public Storefront
             </button>
