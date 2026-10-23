@@ -22,7 +22,11 @@ import {
   Building2,
   Banknote,
   MapPin,
-  AlertCircle
+  AlertCircle,
+  Tag,
+  SlidersHorizontal,
+  MessageSquare,
+  Send
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -35,13 +39,28 @@ export default function Storefront() {
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState('');
   const [searchSource, setSearchSource] = useState('database-engine');
   const [isLoading, setIsLoading] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
 
+  // Reviews State
+  const [productReviews, setProductReviews] = useState([]);
+  const [loadingReviews, setLoadingReviews] = useState(false);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState('');
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  const [reviewMessage, setReviewMessage] = useState({ text: '', type: '' });
+
   // Redis-backed Cart State
   const [cart, setCart] = useState({ items: [], subtotal: 0, itemCount: 0 });
   const [isCartOpen, setIsCartOpen] = useState(false);
+
+  // Coupons / Promo State
+  const [couponInput, setCouponInput] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [couponError, setCouponError] = useState('');
+  const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
 
   // Interactive Payment & Checkout State
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
@@ -71,12 +90,13 @@ export default function Storefront() {
     fetchCart();
   }, []);
 
-  const fetchProducts = async (query = searchQuery, category = selectedCategory) => {
+  const fetchProducts = async (query = searchQuery, category = selectedCategory, sort = sortBy) => {
     setIsLoading(true);
     try {
       const params = new URLSearchParams();
       if (query) params.append('q', query);
       if (category) params.append('category', category);
+      if (sort) params.append('sort', sort);
 
       const res = await fetch(`/api/products?${params.toString()}`);
       const data = await res.json();
@@ -90,6 +110,105 @@ export default function Storefront() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const fetchProductReviews = async (productId) => {
+    setLoadingReviews(true);
+    try {
+      const res = await fetch(`/api/products/${productId}/reviews`);
+      const data = await res.json();
+      if (data.success) {
+        setProductReviews(data.data || []);
+      }
+    } catch (err) {
+      console.error('Fetch reviews error:', err);
+    } finally {
+      setLoadingReviews(false);
+    }
+  };
+
+  const handleOpenProductDetail = (product) => {
+    setSelectedProduct(product);
+    setReviewMessage({ text: '', type: '' });
+    setReviewComment('');
+    setReviewRating(5);
+    fetchProductReviews(product._id);
+  };
+
+  const handleSubmitReview = async (e) => {
+    e.preventDefault();
+    if (!token) {
+      navigate('/login');
+      return;
+    }
+    if (!reviewComment.trim()) {
+      setReviewMessage({ text: 'Please write a brief comment.', type: 'error' });
+      return;
+    }
+    setReviewSubmitting(true);
+    setReviewMessage({ text: '', type: '' });
+    try {
+      const res = await fetch(`/api/products/${selectedProduct._id}/reviews`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ rating: reviewRating, comment: reviewComment })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setReviewMessage({ text: 'Review published successfully!', type: 'success' });
+        setReviewComment('');
+        fetchProductReviews(selectedProduct._id);
+        fetchProducts(searchQuery, selectedCategory, sortBy);
+        setSelectedProduct(prev => ({
+          ...prev,
+          ratingAverage: data.data.ratingAverage,
+          numReviews: data.data.numReviews
+        }));
+      } else {
+        setReviewMessage({ text: data.message || 'Could not submit review.', type: 'error' });
+      }
+    } catch (err) {
+      setReviewMessage({ text: 'Error submitting review.', type: 'error' });
+    } finally {
+      setReviewSubmitting(false);
+    }
+  };
+
+  const handleApplyCoupon = async (codeToApply) => {
+    const code = (codeToApply || couponInput).trim();
+    if (!code) {
+      setCouponError('Please enter a coupon code.');
+      return;
+    }
+    setCouponError('');
+    setIsApplyingCoupon(true);
+    try {
+      const res = await fetch('/api/coupons/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code, subtotal: cart.subtotal })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setAppliedCoupon(data.data);
+        setCouponInput('');
+        setCouponError('');
+      } else {
+        setCouponError(data.message || 'Invalid coupon.');
+      }
+    } catch (err) {
+      setCouponError('Failed to validate coupon.');
+    } finally {
+      setIsApplyingCoupon(false);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponError('');
   };
 
   const fetchCart = async () => {
@@ -228,13 +347,15 @@ export default function Storefront() {
         body: JSON.stringify({
           items: checkoutItems,
           paymentMethod,
-          shippingAddress
+          shippingAddress,
+          couponCode: appliedCoupon?.code || ''
         })
       });
 
       const data = await res.json();
       if (data.success) {
         setCompletedOrder(data.data);
+        setAppliedCoupon(null);
         confetti({ particleCount: 100, spread: 60, origin: { y: 0.6 } });
         fetchCart();
         fetchProducts();
@@ -379,29 +500,58 @@ export default function Storefront() {
           </div>
         </section>
 
-        {/* Apple Segmented Category Control */}
-        <div className="category-bar">
-          <button
-            className={`category-pill ${selectedCategory === '' ? 'active' : ''}`}
-            onClick={() => {
-              setSelectedCategory('');
-              fetchProducts(searchQuery, '');
-            }}
-          >
-            All Products ({products.length})
-          </button>
-          {['Electronics', 'Fashion', 'Footwear'].map((cat) => (
+        {/* Apple Segmented Category & Sorting Toolbar */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16, marginBottom: 28 }}>
+          <div className="category-bar" style={{ margin: 0 }}>
             <button
-              key={cat}
-              className={`category-pill ${selectedCategory === cat ? 'active' : ''}`}
+              className={`category-pill ${selectedCategory === '' ? 'active' : ''}`}
               onClick={() => {
-                setSelectedCategory(cat);
-                fetchProducts(searchQuery, cat);
+                setSelectedCategory('');
+                fetchProducts(searchQuery, '', sortBy);
               }}
             >
-              {cat}
+              All Products ({products.length})
             </button>
-          ))}
+            {['Electronics', 'Fashion', 'Footwear', 'Home & Living', 'Accessories'].map((cat) => (
+              <button
+                key={cat}
+                className={`category-pill ${selectedCategory === cat ? 'active' : ''}`}
+                onClick={() => {
+                  setSelectedCategory(cat);
+                  fetchProducts(searchQuery, cat, sortBy);
+                }}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+
+          {/* Sort By Filter Dropdown */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(255, 255, 255, 0.04)', padding: '6px 14px', borderRadius: 980, border: '1px solid var(--apple-hairline)' }}>
+            <SlidersHorizontal size={13} color="var(--apple-secondary)" />
+            <span style={{ fontSize: '0.78rem', color: 'var(--apple-secondary)', fontWeight: 500 }}>Sort:</span>
+            <select
+              value={sortBy}
+              onChange={(e) => {
+                setSortBy(e.target.value);
+                fetchProducts(searchQuery, selectedCategory, e.target.value);
+              }}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: 'var(--apple-text)',
+                fontSize: '0.78rem',
+                fontWeight: 500,
+                outline: 'none',
+                cursor: 'pointer'
+              }}
+            >
+              <option value="" style={{ background: '#1d1d1f' }}>Featured (Newest)</option>
+              <option value="price-asc" style={{ background: '#1d1d1f' }}>Price: Low to High</option>
+              <option value="price-desc" style={{ background: '#1d1d1f' }}>Price: High to Low</option>
+              <option value="rating" style={{ background: '#1d1d1f' }}>Top Customer Rating</option>
+            </select>
+          </div>
         </div>
 
         {/* Product Gallery Grid */}
@@ -426,7 +576,7 @@ export default function Storefront() {
               <div
                 key={product._id}
                 className="product-card"
-                onClick={() => setSelectedProduct(product)}
+                onClick={() => handleOpenProductDetail(product)}
               >
                 <div className="product-img-wrap">
                   <img src={product.images[0]} alt={product.title} className="product-img" />
@@ -555,13 +705,104 @@ export default function Storefront() {
 
             {cart.items.length > 0 && (
               <div style={{ padding: 24, borderTop: '1px solid var(--apple-hairline)', background: 'rgba(0, 0, 0, 0.3)' }}>
+                {/* Promo Code Input in Cart */}
+                <div style={{ marginBottom: 16 }}>
+                  {!appliedCoupon ? (
+                    <div>
+                      <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+                        <div style={{ position: 'relative', flex: 1 }}>
+                          <Tag size={14} color="var(--apple-secondary)" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)' }} />
+                          <input
+                            type="text"
+                            placeholder="Enter promo (e.g. WELCOME10)"
+                            value={couponInput}
+                            onChange={(e) => { setCouponInput(e.target.value.toUpperCase()); setCouponError(''); }}
+                            className="form-input"
+                            style={{ padding: '7px 10px 7px 30px', fontSize: '0.8rem', textTransform: 'uppercase' }}
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          className="btn btn-secondary"
+                          style={{ padding: '6px 14px', fontSize: '0.8rem', borderRadius: 'var(--radius-sm)' }}
+                          disabled={isApplyingCoupon || !couponInput.trim()}
+                          onClick={() => handleApplyCoupon()}
+                        >
+                          {isApplyingCoupon ? '...' : 'Apply'}
+                        </button>
+                      </div>
+
+                      {/* Quick Coupon Suggestions */}
+                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                        {[
+                          { code: 'WELCOME10', label: '10% OFF' },
+                          { code: 'FESTIVE20', label: '20% OFF' }
+                        ].map(c => (
+                          <button
+                            key={c.code}
+                            type="button"
+                            onClick={() => handleApplyCoupon(c.code)}
+                            style={{
+                              background: 'rgba(48, 209, 88, 0.1)',
+                              border: '1px solid rgba(48, 209, 88, 0.3)',
+                              color: 'var(--apple-green)',
+                              borderRadius: 6,
+                              padding: '2px 8px',
+                              fontSize: '0.72rem',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            🏷️ {c.code} ({c.label})
+                          </button>
+                        ))}
+                      </div>
+
+                      {couponError && (
+                        <div style={{ color: '#ff453a', fontSize: '0.74rem', marginTop: 6 }}>{couponError}</div>
+                      )}
+                    </div>
+                  ) : (
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      background: 'rgba(48, 209, 88, 0.12)',
+                      border: '1px solid rgba(48, 209, 88, 0.3)',
+                      padding: '8px 12px',
+                      borderRadius: 8
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <Tag size={14} color="var(--apple-green)" />
+                        <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--apple-green)' }}>
+                          {appliedCoupon.code} Applied (-₹{appliedCoupon.discountAmount.toLocaleString()})
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleRemoveCoupon}
+                        style={{ background: 'none', border: 'none', color: 'var(--apple-secondary)', cursor: 'pointer', fontSize: '0.75rem' }}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  )}
+                </div>
+
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: '0.85rem', color: 'var(--apple-secondary)' }}>
                   <span>Subtotal</span>
                   <span>₹{cart.subtotal.toLocaleString()}</span>
                 </div>
+
+                {appliedCoupon && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: '0.85rem', color: 'var(--apple-green)', fontWeight: 600 }}>
+                    <span>Promo Discount ({appliedCoupon.code})</span>
+                    <span>-₹{appliedCoupon.discountAmount.toLocaleString()}</span>
+                  </div>
+                )}
+
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 20, fontSize: '1.25rem', fontWeight: 700 }}>
                   <span>Total</span>
-                  <span>₹{cart.subtotal.toLocaleString()}</span>
+                  <span>₹{Math.max(0, cart.subtotal - (appliedCoupon ? appliedCoupon.discountAmount : 0)).toLocaleString()}</span>
                 </div>
 
                 <button
@@ -606,22 +847,38 @@ export default function Storefront() {
                 </div>
 
                 {/* Ledger Breakdown Card */}
-                <div style={{ background: 'rgba(255, 255, 255, 0.03)', borderRadius: 12, padding: 18, marginBottom: 24, border: '1px solid var(--apple-hairline)' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10, fontSize: '0.86rem' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ color: 'var(--apple-secondary)' }}>Cart Subtotal</span>
-                      <strong style={{ color: 'var(--apple-text)' }}>₹{cart.subtotal.toLocaleString()}</strong>
+                {(() => {
+                  const discountVal = appliedCoupon ? appliedCoupon.discountAmount : 0;
+                  const finalPayable = Math.max(0, cart.subtotal - discountVal);
+                  return (
+                    <div style={{ background: 'rgba(255, 255, 255, 0.03)', borderRadius: 12, padding: 18, marginBottom: 24, border: '1px solid var(--apple-hairline)' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, fontSize: '0.86rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <span style={{ color: 'var(--apple-secondary)' }}>Cart Subtotal</span>
+                          <strong style={{ color: 'var(--apple-text)' }}>₹{cart.subtotal.toLocaleString()}</strong>
+                        </div>
+                        {appliedCoupon && (
+                          <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--apple-green)' }}>
+                            <span>Promo Discount ({appliedCoupon.code})</span>
+                            <strong>-₹{discountVal.toLocaleString()}</strong>
+                          </div>
+                        )}
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <span style={{ color: 'var(--apple-secondary)' }}>Platform Service Fee (10%)</span>
+                          <strong style={{ color: 'var(--apple-green)' }}>₹{(finalPayable * 0.1).toFixed(2)}</strong>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 8, borderTop: '1px solid var(--apple-hairline)' }}>
+                          <span style={{ color: 'var(--apple-secondary)' }}>Net Vendor Remittance (90%)</span>
+                          <strong style={{ color: '#2997ff' }}>₹{(finalPayable * 0.9).toFixed(2)}</strong>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 8, borderTop: '1px solid var(--apple-hairline)', fontSize: '0.95rem' }}>
+                          <span style={{ fontWeight: 600 }}>Total Payable</span>
+                          <strong style={{ color: 'var(--apple-text)' }}>₹{finalPayable.toLocaleString()}</strong>
+                        </div>
+                      </div>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ color: 'var(--apple-secondary)' }}>Platform Service Fee (10%)</span>
-                      <strong style={{ color: 'var(--apple-green)' }}>₹{(cart.subtotal * 0.1).toFixed(2)}</strong>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 8, borderTop: '1px solid var(--apple-hairline)' }}>
-                      <span style={{ color: 'var(--apple-secondary)' }}>Net Vendor Remittance (90%)</span>
-                      <strong style={{ color: '#2997ff' }}>₹{(cart.subtotal * 0.9).toFixed(2)}</strong>
-                    </div>
-                  </div>
-                </div>
+                  );
+                })()}
 
                 {/* Shipping Destination Strip */}
                 <div style={{ background: 'rgba(255, 255, 255, 0.03)', borderRadius: 10, padding: '12px 16px', border: '1px solid var(--apple-hairline)', marginBottom: 18 }}>
@@ -857,18 +1114,24 @@ export default function Storefront() {
                   </div>
                 )}
 
-                <button
-                  className="btn btn-primary"
-                  style={{ width: '100%', padding: '12px', fontSize: '0.95rem' }}
-                  disabled={isProcessingPayment}
-                  onClick={handleCheckout}
-                >
-                  {isProcessingPayment
-                    ? 'Processing Split Authorization...'
-                    : paymentMethod === 'cod'
-                    ? `Confirm Cash on Delivery (₹${cart.subtotal.toLocaleString()})`
-                    : `Pay ₹${cart.subtotal.toLocaleString()}`}
-                </button>
+                {(() => {
+                  const discountVal = appliedCoupon ? appliedCoupon.discountAmount : 0;
+                  const finalPayable = Math.max(0, cart.subtotal - discountVal);
+                  return (
+                    <button
+                      className="btn btn-primary"
+                      style={{ width: '100%', padding: '12px', fontSize: '0.95rem' }}
+                      disabled={isProcessingPayment}
+                      onClick={handleCheckout}
+                    >
+                      {isProcessingPayment
+                        ? 'Processing Split Authorization...'
+                        : paymentMethod === 'cod'
+                        ? `Confirm Cash on Delivery (₹${finalPayable.toLocaleString()})`
+                        : `Pay ₹${finalPayable.toLocaleString()}`}
+                    </button>
+                  );
+                })()}
               </div>
             ) : (
               <div style={{ textAlign: 'center' }}>
@@ -907,11 +1170,11 @@ export default function Storefront() {
       )}
 
       {/* =========================================================================
-          APPLE PRODUCT DETAIL SHEET
+          APPLE PRODUCT DETAIL SHEET WITH REVIEWS & RATINGS
           ========================================================================= */}
       {selectedProduct && (
         <div className="modal-overlay" onClick={() => setSelectedProduct(null)}>
-          <div className="modal-dialog" onClick={(e) => e.stopPropagation()} style={{ padding: 36 }}>
+          <div className="modal-dialog" onClick={(e) => e.stopPropagation()} style={{ padding: 36, maxHeight: '88vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
               <button
                 style={{ background: 'transparent', border: 'none', color: 'var(--apple-secondary)', cursor: 'pointer' }}
@@ -921,7 +1184,7 @@ export default function Storefront() {
               </button>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28, marginBottom: 24 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28, marginBottom: 20 }}>
               <img
                 src={selectedProduct.images[0]}
                 alt={selectedProduct.title}
@@ -953,9 +1216,146 @@ export default function Storefront() {
               </div>
             </div>
 
-            <p style={{ color: 'var(--apple-secondary)', fontSize: '0.88rem', lineHeight: 1.55 }}>
+            <p style={{ color: 'var(--apple-secondary)', fontSize: '0.88rem', lineHeight: 1.55, marginBottom: 20 }}>
               {selectedProduct.description}
             </p>
+
+            {/* Customer Reviews & Ratings Section */}
+            <div style={{ marginTop: 20, paddingTop: 20, borderTop: '1px solid var(--apple-hairline)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                <div>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: 600, letterSpacing: '-0.01em', display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <MessageSquare size={16} color="var(--apple-blue)" />
+                    Customer Reviews ({selectedProduct.numReviews || productReviews.length || 0})
+                  </h3>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
+                    <div style={{ display: 'flex', color: '#ffd60a' }}>
+                      {[1, 2, 3, 4, 5].map((s) => (
+                        <Star
+                          key={s}
+                          size={13}
+                          fill={s <= Math.round(selectedProduct.ratingAverage || 5) ? '#ffd60a' : 'transparent'}
+                          color="#ffd60a"
+                        />
+                      ))}
+                    </div>
+                    <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--apple-text)' }}>
+                      {selectedProduct.ratingAverage || 5.0} / 5.0
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Reviews List */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20, maxHeight: 200, overflowY: 'auto' }}>
+                {loadingReviews ? (
+                  <div style={{ textAlign: 'center', padding: 14, color: 'var(--apple-secondary)', fontSize: '0.8rem' }}>
+                    Loading reviews...
+                  </div>
+                ) : productReviews.length === 0 ? (
+                  <div style={{ padding: 14, background: 'rgba(255, 255, 255, 0.02)', borderRadius: 10, textAlign: 'center', color: 'var(--apple-secondary)', fontSize: '0.82rem' }}>
+                    No customer reviews yet. Be the first to share your thoughts!
+                  </div>
+                ) : (
+                  productReviews.map((rev) => (
+                    <div
+                      key={rev._id}
+                      style={{
+                        padding: '10px 14px',
+                        background: 'rgba(255, 255, 255, 0.03)',
+                        borderRadius: 10,
+                        border: '1px solid var(--apple-hairline)'
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <span style={{ fontWeight: 600, fontSize: '0.82rem' }}>{rev.customer?.name || 'Customer'}</span>
+                          <span className="badge badge-green" style={{ fontSize: '0.64rem', padding: '1px 6px' }}>Verified Buyer</span>
+                        </div>
+                        <div style={{ display: 'flex', color: '#ffd60a' }}>
+                          {[1, 2, 3, 4, 5].map((s) => (
+                            <Star
+                              key={s}
+                              size={11}
+                              fill={s <= rev.rating ? '#ffd60a' : 'transparent'}
+                              color="#ffd60a"
+                            />
+                          ))}
+                        </div>
+                      </div>
+                      <p style={{ fontSize: '0.8rem', color: 'var(--apple-secondary)', lineHeight: 1.45, margin: 0 }}>
+                        {rev.comment}
+                      </p>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* Write a Review Form */}
+              <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: 16, borderRadius: 12, border: '1px solid var(--apple-hairline)' }}>
+                <h4 style={{ fontSize: '0.84rem', fontWeight: 600, marginBottom: 8 }}>Write a Verified Review</h4>
+                <form onSubmit={handleSubmitReview}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                    <span style={{ fontSize: '0.76rem', color: 'var(--apple-secondary)' }}>Rating:</span>
+                    <div style={{ display: 'flex', gap: 4 }}>
+                      {[1, 2, 3, 4, 5].map((starVal) => (
+                        <button
+                          key={starVal}
+                          type="button"
+                          onClick={() => setReviewRating(starVal)}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                        >
+                          <Star
+                            size={16}
+                            fill={starVal <= reviewRating ? '#ffd60a' : 'transparent'}
+                            color="#ffd60a"
+                          />
+                        </button>
+                      ))}
+                    </div>
+                    <span style={{ fontSize: '0.76rem', fontWeight: 600, color: 'var(--apple-text)' }}>
+                      {reviewRating} / 5 Stars
+                    </span>
+                  </div>
+
+                  <div style={{ marginBottom: 10 }}>
+                    <textarea
+                      rows={2}
+                      className="form-textarea"
+                      placeholder="Share your thoughts on build quality, design, and performance..."
+                      value={reviewComment}
+                      onChange={(e) => setReviewComment(e.target.value)}
+                      style={{ fontSize: '0.8rem', padding: '6px 10px' }}
+                    />
+                  </div>
+
+                  {reviewMessage.text && (
+                    <div
+                      style={{
+                        padding: '6px 10px',
+                        borderRadius: 6,
+                        fontSize: '0.75rem',
+                        marginBottom: 10,
+                        background: reviewMessage.type === 'success' ? 'rgba(48, 209, 88, 0.15)' : 'rgba(255, 69, 58, 0.15)',
+                        color: reviewMessage.type === 'success' ? 'var(--apple-green)' : '#ff453a',
+                        border: reviewMessage.type === 'success' ? '1px solid rgba(48, 209, 88, 0.3)' : '1px solid rgba(255, 69, 58, 0.3)'
+                      }}
+                    >
+                      {reviewMessage.text}
+                    </div>
+                  )}
+
+                  <button
+                    type="submit"
+                    className="btn btn-secondary"
+                    disabled={reviewSubmitting}
+                    style={{ fontSize: '0.78rem', padding: '6px 14px', display: 'flex', alignItems: 'center', gap: 6 }}
+                  >
+                    <Send size={12} /> {reviewSubmitting ? 'Submitting...' : 'Post Review'}
+                  </button>
+                </form>
+              </div>
+            </div>
           </div>
         </div>
       )}

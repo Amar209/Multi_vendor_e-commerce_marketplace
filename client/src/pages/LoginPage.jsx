@@ -1,30 +1,37 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Layers, Store, ShieldCheck, User, Lock, Mail, ArrowRight } from 'lucide-react';
+import { Layers, Store, ShieldCheck, User, Lock, Mail, ArrowRight, Sparkles, Phone, Building2 } from 'lucide-react';
 
 export default function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
 
+  const [isRegister, setIsRegister] = useState(false);
   const [roleTab, setRoleTab] = useState('customer'); // 'customer' | 'vendor' | 'admin'
   const [email, setEmail] = useState('customer@example.com');
   const [password, setPassword] = useState('password123');
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [storeName, setStoreName] = useState('');
+  const [storeDescription, setStoreDescription] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleTabChange = (role) => {
     setRoleTab(role);
     setError('');
-    if (role === 'customer') {
-      setEmail('customer@example.com');
-      setPassword('password123');
-    } else if (role === 'vendor') {
-      setEmail('tech@vendor.com');
-      setPassword('password123');
-    } else if (role === 'admin') {
-      setEmail('admin@marketplace.com');
-      setPassword('password123');
+    if (!isRegister) {
+      if (role === 'customer') {
+        setEmail('customer@example.com');
+        setPassword('password123');
+      } else if (role === 'vendor') {
+        setEmail('tech@vendor.com');
+        setPassword('password123');
+      } else if (role === 'admin') {
+        setEmail('admin@marketplace.com');
+        setPassword('password123');
+      }
     }
   };
 
@@ -34,13 +41,44 @@ export default function LoginPage() {
     setIsSubmitting(true);
 
     try {
-      const result = await login(email, password);
-      if (result.success) {
-        if (result.user.role === 'admin') navigate('/admin');
-        else if (result.user.role === 'vendor') navigate('/vendor');
-        else navigate('/');
+      if (!isRegister) {
+        // Sign in
+        const result = await login(email, password);
+        if (result.success) {
+          if (result.user.role === 'admin') navigate('/admin');
+          else if (result.user.role === 'vendor') navigate('/vendor');
+          else navigate('/');
+        } else {
+          setError(result.message || 'Invalid credentials.');
+        }
       } else {
-        setError(result.message || 'Invalid credentials.');
+        // Registration / Merchant Onboarding
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name,
+            email,
+            password,
+            role: roleTab,
+            phone,
+            storeName: roleTab === 'vendor' ? storeName : undefined,
+            storeDescription: roleTab === 'vendor' ? storeDescription : undefined
+          })
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          localStorage.setItem('token', data.token);
+          // Reload window so AuthProvider grabs token cleanly
+          if (roleTab === 'vendor') {
+            window.location.href = '/vendor';
+          } else {
+            window.location.href = '/';
+          }
+        } else {
+          setError(data.message || 'Registration failed.');
+        }
       }
     } catch {
       setError('Connection error. Please try again.');
@@ -51,9 +89,9 @@ export default function LoginPage() {
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, background: 'var(--apple-bg)' }}>
-      <div className="apple-card" style={{ maxWidth: 420, width: '100%', padding: 36 }}>
+      <div className="apple-card" style={{ maxWidth: 460, width: '100%', padding: 36 }}>
         {/* Apple Logo Icon */}
-        <div style={{ textAlign: 'center', marginBottom: 24 }}>
+        <div style={{ textAlign: 'center', marginBottom: 20 }}>
           <div
             style={{
               width: 44,
@@ -64,22 +102,28 @@ export default function LoginPage() {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              margin: '0 auto 16px',
+              margin: '0 auto 14px',
               color: 'var(--apple-text)'
             }}
           >
             <Layers size={22} />
           </div>
           <h1 style={{ fontSize: '1.45rem', fontWeight: 600, letterSpacing: '-0.025em', marginBottom: 6 }}>
-            Sign in to MarketPulse
+            {isRegister
+              ? roleTab === 'vendor'
+                ? 'Merchant Store Onboarding'
+                : 'Create Customer Account'
+              : 'Sign in to MarketPulse'}
           </h1>
           <p style={{ color: 'var(--apple-secondary)', fontSize: '0.84rem' }}>
-            Enter your credentials to access your portal
+            {isRegister
+              ? 'Join the multi-vendor marketplace platform'
+              : 'Enter your credentials to access your portal'}
           </p>
         </div>
 
-        {/* Apple Segmented Switcher */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 4, background: 'rgba(255, 255, 255, 0.04)', padding: 3, borderRadius: 10, marginBottom: 24, border: '1px solid var(--apple-hairline)' }}>
+        {/* Role Segmented Switcher */}
+        <div style={{ display: 'grid', gridTemplateColumns: isRegister ? '1fr 1fr' : '1fr 1fr 1fr', gap: 4, background: 'rgba(255, 255, 255, 0.04)', padding: 3, borderRadius: 10, marginBottom: 22, border: '1px solid var(--apple-hairline)' }}>
           <button
             type="button"
             className="btn"
@@ -92,7 +136,7 @@ export default function LoginPage() {
             }}
             onClick={() => handleTabChange('customer')}
           >
-            Shopper
+            {isRegister ? 'Shopper' : 'Shopper'}
           </button>
           <button
             type="button"
@@ -106,22 +150,24 @@ export default function LoginPage() {
             }}
             onClick={() => handleTabChange('vendor')}
           >
-            Merchant
+            {isRegister ? '🏪 Merchant (Store Onboarding)' : 'Merchant'}
           </button>
-          <button
-            type="button"
-            className="btn"
-            style={{
-              padding: '6px 8px',
-              fontSize: '0.78rem',
-              borderRadius: 8,
-              background: roleTab === 'admin' ? 'rgba(255, 255, 255, 0.12)' : 'transparent',
-              color: roleTab === 'admin' ? 'var(--apple-text)' : 'var(--apple-secondary)'
-            }}
-            onClick={() => handleTabChange('admin')}
-          >
-            Admin
-          </button>
+          {!isRegister && (
+            <button
+              type="button"
+              className="btn"
+              style={{
+                padding: '6px 8px',
+                fontSize: '0.78rem',
+                borderRadius: 8,
+                background: roleTab === 'admin' ? 'rgba(255, 255, 255, 0.12)' : 'transparent',
+                color: roleTab === 'admin' ? 'var(--apple-text)' : 'var(--apple-secondary)'
+              }}
+              onClick={() => handleTabChange('admin')}
+            >
+              Admin
+            </button>
+          )}
         </div>
 
         {error && (
@@ -131,6 +177,60 @@ export default function LoginPage() {
         )}
 
         <form onSubmit={handleSubmit}>
+          {isRegister && (
+            <>
+              <div className="form-group">
+                <label className="form-label">Full Name</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Alex Johnson"
+                  className="form-input"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
+              </div>
+
+              {roleTab === 'vendor' && (
+                <>
+                  <div className="form-group">
+                    <label className="form-label">Storefront / Brand Name</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Apex Electronics & Audio"
+                      className="form-input"
+                      value={storeName}
+                      onChange={(e) => setStoreName(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Store Description</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Curated studio headphones and wireless tech."
+                      className="form-input"
+                      value={storeDescription}
+                      onChange={(e) => setStoreDescription(e.target.value)}
+                    />
+                  </div>
+                </>
+              )}
+
+              <div className="form-group">
+                <label className="form-label">Contact Phone</label>
+                <input
+                  type="tel"
+                  placeholder="+91 9876543210"
+                  className="form-input"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                />
+              </div>
+            </>
+          )}
+
           <div className="form-group">
             <label className="form-label">Email</label>
             <input
@@ -159,11 +259,34 @@ export default function LoginPage() {
             style={{ width: '100%', padding: '10px', fontSize: '0.9rem' }}
             disabled={isSubmitting}
           >
-            {isSubmitting ? 'Signing in...' : `Sign in to ${roleTab === 'customer' ? 'Storefront' : roleTab === 'vendor' ? 'Seller Central' : 'Admin Console'}`}
+            {isSubmitting
+              ? 'Processing...'
+              : isRegister
+              ? roleTab === 'vendor'
+                ? 'Complete Store Onboarding'
+                : 'Create Shopper Account'
+              : `Sign in to ${roleTab === 'customer' ? 'Storefront' : roleTab === 'vendor' ? 'Seller Central' : 'Admin Console'}`}
           </button>
         </form>
 
-        <div style={{ textAlign: 'center', marginTop: 22 }}>
+        {/* Toggle between Login and Register */}
+        <div style={{ textAlign: 'center', marginTop: 20, paddingTop: 16, borderTop: '1px solid var(--apple-hairline)' }}>
+          <button
+            type="button"
+            style={{ background: 'none', border: 'none', color: 'var(--apple-blue)', cursor: 'pointer', fontSize: '0.82rem' }}
+            onClick={() => {
+              setIsRegister(!isRegister);
+              setError('');
+              if (!isRegister && roleTab === 'admin') setRoleTab('customer');
+            }}
+          >
+            {isRegister
+              ? 'Already have an account? Sign In'
+              : 'New to MarketPulse? Onboard as Merchant / Register'}
+          </button>
+        </div>
+
+        <div style={{ textAlign: 'center', marginTop: 14 }}>
           <a
             href="/"
             style={{ color: 'var(--apple-secondary)', fontSize: '0.8rem', textDecoration: 'none' }}

@@ -16,7 +16,8 @@ import {
   Layers,
   RotateCcw,
   UploadCloud,
-  AlertCircle
+  AlertCircle,
+  Edit3
 } from 'lucide-react';
 
 export default function VendorPortal() {
@@ -27,6 +28,20 @@ export default function VendorPortal() {
   const [orders, setOrders] = useState([]);
   const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // Edit Product Modal State
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [updateError, setUpdateError] = useState('');
+  const [editForm, setEditForm] = useState({
+    title: '',
+    category: 'Electronics',
+    brand: '',
+    price: '',
+    discountPrice: '',
+    stock: 10,
+    description: ''
+  });
 
   // Add Product Modal & Image Upload State
   const fileInputRef = useRef(null);
@@ -249,6 +264,55 @@ export default function VendorPortal() {
       }
     } catch (err) {
       console.error('Delete product error:', err);
+    }
+  };
+
+  const handleStartEdit = (p) => {
+    setEditingProduct(p);
+    setEditForm({
+      title: p.title,
+      category: p.category,
+      brand: p.brand || '',
+      price: p.price,
+      discountPrice: p.discountPrice || '',
+      stock: p.stock,
+      description: p.description
+    });
+    setUpdateError('');
+  };
+
+  const handleUpdateProduct = async (e) => {
+    e.preventDefault();
+    setIsUpdating(true);
+    setUpdateError('');
+    try {
+      const res = await fetch(`/api/products/${editingProduct._id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          title: editForm.title,
+          category: editForm.category,
+          brand: editForm.brand,
+          price: Number(editForm.price),
+          discountPrice: Number(editForm.discountPrice || 0),
+          stock: Number(editForm.stock),
+          description: editForm.description
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setEditingProduct(null);
+        loadData();
+      } else {
+        setUpdateError(data.message || 'Failed to update listing.');
+      }
+    } catch (err) {
+      setUpdateError('Network error updating product.');
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -515,13 +579,24 @@ export default function VendorPortal() {
                       <span style={{ fontSize: '1.15rem', fontWeight: 700 }}>₹{p.price.toLocaleString()}</span>
                       <div style={{ fontSize: '0.74rem', color: 'var(--apple-green)' }}>Stock: {p.stock} units</div>
                     </div>
-                    <button
-                      className="btn btn-secondary"
-                      style={{ padding: '6px 10px', color: 'var(--apple-secondary)' }}
-                      onClick={() => handleDeleteProduct(p._id)}
-                    >
-                      <Trash2 size={14} />
-                    </button>
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      <button
+                        className="btn btn-secondary"
+                        style={{ padding: '6px 10px', color: 'var(--apple-blue)' }}
+                        onClick={() => handleStartEdit(p)}
+                        title="Edit listing details"
+                      >
+                        <Edit3 size={14} />
+                      </button>
+                      <button
+                        className="btn btn-secondary"
+                        style={{ padding: '6px 10px', color: 'var(--apple-secondary)' }}
+                        onClick={() => handleDeleteProduct(p._id)}
+                        title="Delete listing"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -728,6 +803,138 @@ export default function VendorPortal() {
                 style={{ width: '100%', padding: '12px', opacity: isPublishing ? 0.7 : 1 }}
               >
                 {isPublishing ? 'Publishing Listing...' : 'Publish Listing'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Product Listing Modal */}
+      {editingProduct && (
+        <div className="modal-overlay" onClick={() => setEditingProduct(null)}>
+          <div className="modal-dialog" onClick={(e) => e.stopPropagation()} style={{ padding: 36 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <h2 style={{ fontSize: '1.35rem', fontWeight: 600 }}>Edit Listing</h2>
+              <button
+                style={{ background: 'transparent', border: 'none', color: 'var(--apple-secondary)', cursor: 'pointer' }}
+                onClick={() => setEditingProduct(null)}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdateProduct}>
+              <div className="form-group">
+                <label className="form-label">Product Name</label>
+                <input
+                  type="text"
+                  required
+                  className="form-input"
+                  value={editForm.title}
+                  onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                <div className="form-group">
+                  <label className="form-label">Category</label>
+                  <select
+                    className="form-select"
+                    value={editForm.category}
+                    onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
+                  >
+                    <option value="Electronics">Electronics</option>
+                    <option value="Fashion">Fashion</option>
+                    <option value="Footwear">Footwear</option>
+                    <option value="Home & Living">Home & Living</option>
+                    <option value="Accessories">Accessories</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Brand</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={editForm.brand}
+                    onChange={(e) => setEditForm({ ...editForm, brand: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14 }}>
+                <div className="form-group">
+                  <label className="form-label">Price (₹)</label>
+                  <input
+                    type="number"
+                    required
+                    min="1"
+                    className="form-input"
+                    value={editForm.price}
+                    onChange={(e) => setEditForm({ ...editForm, price: e.target.value })}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Discount Price (₹)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    className="form-input"
+                    value={editForm.discountPrice}
+                    onChange={(e) => setEditForm({ ...editForm, discountPrice: e.target.value })}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Stock Units</label>
+                  <input
+                    type="number"
+                    required
+                    min="0"
+                    className="form-input"
+                    value={editForm.stock}
+                    onChange={(e) => setEditForm({ ...editForm, stock: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Specifications & Description</label>
+                <textarea
+                  required
+                  rows={3}
+                  className="form-textarea"
+                  value={editForm.description}
+                  onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                />
+              </div>
+
+              {updateError && (
+                <div style={{
+                  background: 'rgba(255, 69, 58, 0.1)',
+                  border: '1px solid rgba(255, 69, 58, 0.3)',
+                  color: '#ff453a',
+                  borderRadius: 'var(--radius-sm)',
+                  padding: '10px 14px',
+                  fontSize: '0.82rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  marginBottom: 16
+                }}>
+                  <AlertCircle size={15} />
+                  <span>{updateError}</span>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={isUpdating}
+                className="btn btn-primary"
+                style={{ width: '100%', padding: '12px' }}
+              >
+                {isUpdating ? 'Saving Listing Updates...' : 'Save Listing Updates'}
               </button>
             </form>
           </div>

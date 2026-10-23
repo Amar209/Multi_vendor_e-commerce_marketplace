@@ -8,8 +8,12 @@ import {
   getMyProducts
 } from '../controllers/productController.js';
 import { protect, authorize } from '../middleware/auth.js';
+import reviewRoutes from './reviewRoutes.js';
 
 const router = express.Router();
+
+// Nested review router
+router.use('/:productId/reviews', reviewRoutes);
 
 router.route('/')
   .get(getProducts)

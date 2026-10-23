@@ -2,6 +2,8 @@ import { User } from '../models/User.js';
 import { Vendor } from '../models/Vendor.js';
 import { Product } from '../models/Product.js';
 import { Order } from '../models/Order.js';
+import { Coupon } from '../models/Coupon.js';
+import { Review } from '../models/Review.js';
 import { getRedisClient } from '../config/redis.js';
 
 export const resetCleanSlate = async () => {
@@ -13,6 +15,8 @@ export const resetCleanSlate = async () => {
     await Order.deleteMany({});
     await Vendor.deleteMany({});
     await User.deleteMany({});
+    await Coupon.deleteMany({});
+    await Review.deleteMany({});
 
     // Clear Redis carts
     try {
@@ -83,7 +87,32 @@ export const resetCleanSlate = async () => {
       ]
     });
 
-    console.log('[CleanSlate] Clean accounts initialized with deterministic IDs, ₹0 balance, 0 products, 0 orders.');
+    // 4. Default Promo Coupons
+    const nextYear = new Date();
+    nextYear.setFullYear(nextYear.getFullYear() + 1);
+
+    await Coupon.create([
+      {
+        code: 'WELCOME10',
+        discountType: 'percentage',
+        discountValue: 10,
+        minOrderAmount: 1000,
+        maxDiscountAmount: 5000,
+        expiryDate: nextYear,
+        isActive: true
+      },
+      {
+        code: 'FESTIVE20',
+        discountType: 'percentage',
+        discountValue: 20,
+        minOrderAmount: 10000,
+        maxDiscountAmount: 10000,
+        expiryDate: nextYear,
+        isActive: true
+      }
+    ]);
+
+    console.log('[CleanSlate] Clean accounts and promo coupons (WELCOME10, FESTIVE20) initialized.');
   } catch (err) {
     console.error(`[CleanSlate Error] ${err.message}`);
   }

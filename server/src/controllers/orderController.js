@@ -1,6 +1,7 @@
 import { Order } from '../models/Order.js';
 import { Product } from '../models/Product.js';
 import { Vendor } from '../models/Vendor.js';
+import { Coupon } from '../models/Coupon.js';
 import { getRedisClient } from '../config/redis.js';
 import PDFDocument from 'pdfkit';
 
@@ -66,9 +67,22 @@ export const createOrder = async (req, res) => {
       });
     }
 
-    const shippingFee = subtotal > 1000 ? 0 : 50;
-    const tax = Number((subtotal * 0.05).toFixed(2)); // 5% GST/Tax
-    const totalAmount = Number((subtotal + shippingFee + tax).toFixed(2));
+    let discountAmount = 0;
+    if (couponCode) {
+      const coupon = await Coupon.findOne({ code: couponCode.toUpperCase(), isActive: true });
+      if (coupon && subtotal >= coupon.minOrderAmount) {
+        if (coupon.discountType === 'percentage') {
+          discountAmount = Math.min((subtotal * coupon.discountValue) / 100, coupon.maxDiscountAmount || 5000);
+        } else {
+          discountAmount = Math.min(coupon.discountValue, subtotal);
+        }
+      }
+    }
+
+    const discountedSubtotal = Math.max(0, subtotal - discountAmount);
+    const shippingFee = discountedSubtotal > 1000 ? 0 : 50;
+    const tax = Number((discountedSubtotal * 0.05).toFixed(2)); // 5% GST/Tax
+    const totalAmount = Number((discountedSubtotal + shippingFee + tax).toFixed(2));
 
     const orderNumber = `ORD-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`;
 
@@ -90,6 +104,8 @@ export const createOrder = async (req, res) => {
         status: 'paid'
       },
       subtotal,
+      discount: discountAmount,
+      couponCode: couponCode ? couponCode.toUpperCase() : '',
       tax,
       shippingFee,
       commissionTotal,
@@ -253,17 +269,20 @@ export const downloadInvoice = async (req, res) => {
     doc.fontSize(10);
     order.items.forEach((item, index) => {
       doc.text(
-        `${index + 1}. ${item.title} | Store: ${item.vendor?.storeName || 'Vendor'} | Qty: ${item.quantity} | Unit: ₹${item.price} | Total: ₹${item.price * item.quantity}`
+        `${index + 1}. ${item.title} | Store: ${item.vendor?.storeName || 'Vendor'} | Qty: ${item.quantity} | Unit: Rs. ${item.price.toLocaleString()} | Total: Rs. ${(item.price * item.quantity).toLocaleString()}`
       );
     });
     doc.text('--------------------------------------------------------------------------------------------------');
     doc.moveDown();
 
     // Totals
-    doc.fontSize(11).text(`Subtotal: ₹${order.subtotal}`, { align: 'right' });
-    doc.text(`Shipping: ₹${order.shippingFee}`, { align: 'right' });
-    doc.text(`Tax: ₹${order.tax}`, { align: 'right' });
-    doc.fontSize(14).text(`Grand Total: ₹${order.totalAmount}`, { align: 'right' });
+    doc.fontSize(11).text(`Subtotal: Rs. ${order.subtotal.toLocaleString()}`, { align: 'right' });
+    if (order.discount && order.discount > 0) {
+      doc.text(`Promo Discount (${order.couponCode || 'APPLIED'}): -Rs. ${order.discount.toLocaleString()}`, { align: 'right' });
+    }
+    doc.text(`Shipping: Rs. ${order.shippingFee.toLocaleString()}`, { align: 'right' });
+    doc.text(`Tax / GST (5%): Rs. ${order.tax.toLocaleString()}`, { align: 'right' });
+    doc.fontSize(14).text(`Grand Total: Rs. ${order.totalAmount.toLocaleString()}`, { align: 'right' });
 
     doc.end();
   } catch (error) {

@@ -52,6 +52,8 @@ const orderSchema = new mongoose.Schema(
       status: { type: String, enum: ['pending', 'paid', 'failed'], default: 'paid' }
     },
     subtotal: { type: Number, required: true },
+    discount: { type: Number, default: 0 },
+    couponCode: { type: String, default: '' },
     tax: { type: Number, default: 0 },
     shippingFee: { type: Number, default: 0 },
     commissionTotal: { type: Number, required: true },
