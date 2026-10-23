@@ -17,7 +17,12 @@ import {
   LogOut,
   Package,
   Layers,
-  ArrowRight
+  ArrowRight,
+  Smartphone,
+  Building2,
+  Banknote,
+  MapPin,
+  AlertCircle
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -38,10 +43,28 @@ export default function Storefront() {
   const [cart, setCart] = useState({ items: [], subtotal: 0, itemCount: 0 });
   const [isCartOpen, setIsCartOpen] = useState(false);
 
-  // Split Payment Modal State
+  // Interactive Payment & Checkout State
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [completedOrder, setCompletedOrder] = useState(null);
+  const [checkoutError, setCheckoutError] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('card'); // 'card' | 'upi' | 'netbanking' | 'cod'
+  const [cardForm, setCardForm] = useState({
+    name: 'Alex Johnson',
+    number: '',
+    expiry: '',
+    cvv: ''
+  });
+  const [upiId, setUpiId] = useState('');
+  const [selectedBank, setSelectedBank] = useState('HDFC Bank');
+  const [shippingAddress, setShippingAddress] = useState({
+    street: '12 Indiranagar 100ft Road',
+    city: 'Bengaluru',
+    state: 'Karnataka',
+    postalCode: '560038',
+    country: 'India'
+  });
+  const [isEditingAddress, setIsEditingAddress] = useState(false);
 
   useEffect(() => {
     fetchProducts();
@@ -132,11 +155,63 @@ export default function Storefront() {
     }
   };
 
+  const handleCardNumberChange = (e) => {
+    const raw = e.target.value.replace(/\D/g, '').slice(0, 16);
+    const formatted = raw.replace(/(\d{4})(?=\d)/g, '$1 ');
+    setCardForm(prev => ({ ...prev, number: formatted }));
+  };
+
+  const handleExpiryChange = (e) => {
+    let raw = e.target.value.replace(/\D/g, '').slice(0, 4);
+    if (raw.length >= 3) {
+      raw = raw.slice(0, 2) + '/' + raw.slice(2);
+    }
+    setCardForm(prev => ({ ...prev, expiry: raw }));
+  };
+
+  const handleUseDemoCard = () => {
+    setCardForm({
+      name: user?.name || 'Alex Johnson',
+      number: '4532 8920 1204 4242',
+      expiry: '12/28',
+      cvv: '888'
+    });
+    setCheckoutError('');
+  };
+
   const handleCheckout = async () => {
     if (!token) {
       navigate('/login');
       return;
     }
+
+    // Interactive client validation
+    if (paymentMethod === 'card') {
+      if (!cardForm.name.trim()) {
+        setCheckoutError('Please enter the name on the card.');
+        return;
+      }
+      const rawNumber = cardForm.number.replace(/\s+/g, '');
+      if (rawNumber.length < 15) {
+        setCheckoutError('Please enter a valid card number (or click "Auto-fill Demo Card").');
+        return;
+      }
+      if (!cardForm.expiry || cardForm.expiry.length < 5) {
+        setCheckoutError('Please enter a valid expiry date (MM/YY).');
+        return;
+      }
+      if (!cardForm.cvv || cardForm.cvv.length < 3) {
+        setCheckoutError('Please enter a 3-digit CVV security code.');
+        return;
+      }
+    } else if (paymentMethod === 'upi') {
+      if (!upiId.trim() || !upiId.includes('@')) {
+        setCheckoutError('Please enter a valid UPI ID (e.g. yourname@okhdfcbank).');
+        return;
+      }
+    }
+
+    setCheckoutError('');
     setIsProcessingPayment(true);
     try {
       const checkoutItems = cart.items.map(item => ({
@@ -152,7 +227,8 @@ export default function Storefront() {
         },
         body: JSON.stringify({
           items: checkoutItems,
-          paymentMethod: 'stripe'
+          paymentMethod,
+          shippingAddress
         })
       });
 
@@ -163,10 +239,11 @@ export default function Storefront() {
         fetchCart();
         fetchProducts();
       } else {
-        alert(data.message || 'Checkout failed');
+        setCheckoutError(data.message || 'Payment processing declined. Please try again.');
       }
     } catch (err) {
       console.error('Checkout error:', err);
+      setCheckoutError('Network error connecting to payment gateway.');
     } finally {
       setIsProcessingPayment(false);
     }
@@ -546,14 +623,239 @@ export default function Storefront() {
                   </div>
                 </div>
 
-                {/* Secure Card Payment Strip */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: 'rgba(255, 255, 255, 0.04)', borderRadius: 10, border: '1px solid var(--apple-hairline)', marginBottom: 24 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: '0.88rem' }}>
-                    <CreditCard size={18} color="var(--apple-secondary)" />
-                    <span>Credit / Debit Card (Simulated)</span>
+                {/* Shipping Destination Strip */}
+                <div style={{ background: 'rgba(255, 255, 255, 0.03)', borderRadius: 10, padding: '12px 16px', border: '1px solid var(--apple-hairline)', marginBottom: 18 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.78rem', color: 'var(--apple-secondary)', fontWeight: 600 }}>
+                      <MapPin size={13} color="var(--apple-blue)" />
+                      <span>SHIPPING DESTINATION</span>
+                    </div>
+                    <button
+                      type="button"
+                      style={{ background: 'none', border: 'none', color: 'var(--apple-blue)', cursor: 'pointer', fontSize: '0.78rem' }}
+                      onClick={() => setIsEditingAddress(!isEditingAddress)}
+                    >
+                      {isEditingAddress ? 'Done' : 'Edit'}
+                    </button>
                   </div>
-                  <span style={{ color: 'var(--apple-green)', fontSize: '0.78rem', fontWeight: 600 }}>•••• 4242</span>
+                  {!isEditingAddress ? (
+                    <div style={{ fontSize: '0.86rem', color: 'var(--apple-text)' }}>
+                      {shippingAddress.street}, {shippingAddress.city}, {shippingAddress.state} - {shippingAddress.postalCode}
+                    </div>
+                  ) : (
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 8 }}>
+                      <input
+                        type="text"
+                        className="form-input"
+                        placeholder="Street"
+                        style={{ gridColumn: 'span 2', padding: '6px 10px', fontSize: '0.82rem' }}
+                        value={shippingAddress.street}
+                        onChange={(e) => setShippingAddress({ ...shippingAddress, street: e.target.value })}
+                      />
+                      <input
+                        type="text"
+                        className="form-input"
+                        placeholder="City"
+                        style={{ padding: '6px 10px', fontSize: '0.82rem' }}
+                        value={shippingAddress.city}
+                        onChange={(e) => setShippingAddress({ ...shippingAddress, city: e.target.value })}
+                      />
+                      <input
+                        type="text"
+                        className="form-input"
+                        placeholder="PIN Code"
+                        style={{ padding: '6px 10px', fontSize: '0.82rem' }}
+                        value={shippingAddress.postalCode}
+                        onChange={(e) => setShippingAddress({ ...shippingAddress, postalCode: e.target.value })}
+                      />
+                    </div>
+                  )}
                 </div>
+
+                {/* Interactive Payment Method Selector */}
+                <div style={{ marginBottom: 16 }}>
+                  <label style={{ display: 'block', fontSize: '0.76rem', color: 'var(--apple-secondary)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 8 }}>
+                    Select Payment Method
+                  </label>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+                    {[
+                      { id: 'card', label: 'Card', icon: CreditCard },
+                      { id: 'upi', label: 'UPI / QR', icon: Smartphone },
+                      { id: 'netbanking', label: 'NetBanking', icon: Building2 },
+                      { id: 'cod', label: 'Cash on Del.', icon: Banknote }
+                    ].map(m => {
+                      const Icon = m.icon;
+                      const active = paymentMethod === m.id;
+                      return (
+                        <button
+                          key={m.id}
+                          type="button"
+                          onClick={() => { setPaymentMethod(m.id); setCheckoutError(''); }}
+                          style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            gap: 6,
+                            padding: '10px 4px',
+                            borderRadius: 'var(--radius-sm)',
+                            border: active ? '1px solid var(--apple-blue)' : '1px solid var(--apple-hairline)',
+                            background: active ? 'rgba(0, 113, 227, 0.12)' : 'rgba(255, 255, 255, 0.02)',
+                            color: active ? 'var(--apple-blue)' : 'var(--apple-secondary)',
+                            cursor: 'pointer',
+                            transition: 'var(--transition-apple)'
+                          }}
+                        >
+                          <Icon size={17} />
+                          <span style={{ fontSize: '0.72rem', fontWeight: active ? 600 : 400 }}>{m.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Card Payment Inputs */}
+                {paymentMethod === 'card' && (
+                  <div style={{ background: 'rgba(255, 255, 255, 0.03)', borderRadius: 10, padding: 16, border: '1px solid var(--apple-hairline)', marginBottom: 20 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                      <span style={{ fontSize: '0.82rem', fontWeight: 600 }}>Card Information</span>
+                      <button
+                        type="button"
+                        onClick={handleUseDemoCard}
+                        style={{
+                          background: 'rgba(0, 113, 227, 0.15)',
+                          border: '1px solid rgba(0, 113, 227, 0.3)',
+                          color: 'var(--apple-blue)',
+                          padding: '3px 8px',
+                          borderRadius: 6,
+                          fontSize: '0.72rem',
+                          cursor: 'pointer',
+                          fontWeight: 500
+                        }}
+                      >
+                        ⚡ Auto-fill Demo Card
+                      </button>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                      <input
+                        type="text"
+                        className="form-input"
+                        placeholder="Name on Card"
+                        style={{ padding: '8px 12px', fontSize: '0.84rem' }}
+                        value={cardForm.name}
+                        onChange={(e) => setCardForm({ ...cardForm, name: e.target.value })}
+                      />
+                      <input
+                        type="text"
+                        className="form-input"
+                        placeholder="Card Number (XXXX XXXX XXXX XXXX)"
+                        style={{ padding: '8px 12px', fontSize: '0.84rem', letterSpacing: '0.04em' }}
+                        value={cardForm.number}
+                        onChange={handleCardNumberChange}
+                      />
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                        <input
+                          type="text"
+                          className="form-input"
+                          placeholder="MM / YY"
+                          style={{ padding: '8px 12px', fontSize: '0.84rem', textAlign: 'center' }}
+                          value={cardForm.expiry}
+                          onChange={handleExpiryChange}
+                        />
+                        <input
+                          type="password"
+                          maxLength={4}
+                          className="form-input"
+                          placeholder="CVV"
+                          style={{ padding: '8px 12px', fontSize: '0.84rem', textAlign: 'center' }}
+                          value={cardForm.cvv}
+                          onChange={(e) => setCardForm({ ...cardForm, cvv: e.target.value.replace(/\D/g, '') })}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* UPI Payment Inputs */}
+                {paymentMethod === 'upi' && (
+                  <div style={{ background: 'rgba(255, 255, 255, 0.03)', borderRadius: 10, padding: 16, border: '1px solid var(--apple-hairline)', marginBottom: 20 }}>
+                    <div style={{ fontSize: '0.82rem', fontWeight: 600, marginBottom: 10 }}>Enter Virtual Payment Address (UPI ID)</div>
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="e.g. alex@okhdfcbank or 9876543210@paytm"
+                      style={{ padding: '8px 12px', fontSize: '0.84rem', marginBottom: 12 }}
+                      value={upiId}
+                      onChange={(e) => setUpiId(e.target.value)}
+                    />
+                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                      {['@okhdfcbank', '@paytm', '@ybl', '@ibl'].map(handle => (
+                        <button
+                          key={handle}
+                          type="button"
+                          style={{
+                            background: 'rgba(255, 255, 255, 0.05)',
+                            border: '1px solid var(--apple-hairline)',
+                            color: 'var(--apple-secondary)',
+                            padding: '3px 8px',
+                            borderRadius: 6,
+                            fontSize: '0.72rem',
+                            cursor: 'pointer'
+                          }}
+                          onClick={() => setUpiId((prev) => (prev ? prev.split('@')[0] : 'alex') + handle)}
+                        >
+                          {handle}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Net Banking Inputs */}
+                {paymentMethod === 'netbanking' && (
+                  <div style={{ background: 'rgba(255, 255, 255, 0.03)', borderRadius: 10, padding: 16, border: '1px solid var(--apple-hairline)', marginBottom: 20 }}>
+                    <div style={{ fontSize: '0.82rem', fontWeight: 600, marginBottom: 10 }}>Select Your Bank</div>
+                    <select
+                      className="form-select"
+                      value={selectedBank}
+                      onChange={(e) => setSelectedBank(e.target.value)}
+                      style={{ padding: '8px 12px', fontSize: '0.84rem' }}
+                    >
+                      <option value="HDFC Bank">HDFC Bank</option>
+                      <option value="ICICI Bank">ICICI Bank</option>
+                      <option value="State Bank of India">State Bank of India</option>
+                      <option value="Axis Bank">Axis Bank</option>
+                      <option value="Kotak Mahindra Bank">Kotak Mahindra Bank</option>
+                    </select>
+                  </div>
+                )}
+
+                {/* Cash on Delivery */}
+                {paymentMethod === 'cod' && (
+                  <div style={{ background: 'rgba(255, 255, 255, 0.03)', borderRadius: 10, padding: 16, border: '1px solid var(--apple-hairline)', marginBottom: 20 }}>
+                    <div style={{ fontSize: '0.84rem', color: 'var(--apple-text)', lineHeight: 1.5 }}>
+                      💵 <strong>Pay on Delivery:</strong> Please keep exact cash or UPI QR payment ready at your doorstep when your shipment arrives.
+                    </div>
+                  </div>
+                )}
+
+                {checkoutError && (
+                  <div style={{
+                    background: 'rgba(255, 69, 58, 0.1)',
+                    border: '1px solid rgba(255, 69, 58, 0.3)',
+                    color: '#ff453a',
+                    borderRadius: 'var(--radius-sm)',
+                    padding: '8px 12px',
+                    fontSize: '0.8rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    marginBottom: 16
+                  }}>
+                    <AlertCircle size={14} />
+                    <span>{checkoutError}</span>
+                  </div>
+                )}
 
                 <button
                   className="btn btn-primary"
@@ -561,7 +863,11 @@ export default function Storefront() {
                   disabled={isProcessingPayment}
                   onClick={handleCheckout}
                 >
-                  {isProcessingPayment ? 'Processing Split Authorization...' : `Pay ₹${cart.subtotal.toLocaleString()}`}
+                  {isProcessingPayment
+                    ? 'Processing Split Authorization...'
+                    : paymentMethod === 'cod'
+                    ? `Confirm Cash on Delivery (₹${cart.subtotal.toLocaleString()})`
+                    : `Pay ₹${cart.subtotal.toLocaleString()}`}
                 </button>
               </div>
             ) : (

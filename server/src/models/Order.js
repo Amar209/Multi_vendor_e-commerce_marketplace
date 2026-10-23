@@ -47,7 +47,7 @@ const orderSchema = new mongoose.Schema(
       country: String
     },
     paymentInfo: {
-      provider: { type: String, enum: ['stripe', 'razorpay', 'cod'], default: 'stripe' },
+      provider: { type: String, enum: ['card', 'upi', 'netbanking', 'stripe', 'razorpay', 'cod'], default: 'card' },
       paymentIntentId: String,
       status: { type: String, enum: ['pending', 'paid', 'failed'], default: 'paid' }
     },
