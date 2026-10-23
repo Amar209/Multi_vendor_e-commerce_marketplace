@@ -329,7 +329,21 @@ export default function Storefront() {
 
         {/* Product Gallery Grid */}
         <div className="product-grid">
-          {products.map((product) => {
+          {products.length === 0 ? (
+            <div className="apple-card" style={{ padding: 48, textAlign: 'center', color: 'var(--apple-secondary)', gridColumn: '1 / -1' }}>
+              <Package size={38} style={{ margin: '0 auto 14px', opacity: 0.3 }} />
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 600, color: 'var(--apple-text)', marginBottom: 8 }}>
+                No marketplace listings yet
+              </h3>
+              <p style={{ fontSize: '0.86rem', marginBottom: 20 }}>
+                Merchants can publish products in Seller Central to make them available here.
+              </p>
+              <button className="btn btn-primary" onClick={() => navigate('/vendor')}>
+                Go to Seller Central to Publish First Product
+              </button>
+            </div>
+          ) : (
+            products.map((product) => {
             const displayPrice = product.discountPrice > 0 ? product.discountPrice : product.price;
             return (
               <div
@@ -388,7 +402,7 @@ export default function Storefront() {
                 </div>
               </div>
             );
-          })}
+          }))}
         </div>
       </main>
 

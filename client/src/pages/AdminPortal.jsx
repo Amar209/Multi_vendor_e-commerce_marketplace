@@ -120,7 +120,7 @@ export default function AdminPortal() {
               <Store size={18} color="var(--apple-amber)" />
             </div>
             <div style={{ fontSize: '2rem', fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--apple-text)' }}>
-              {analytics?.summary?.totalVendors || 2} Stores
+              {analytics?.summary?.totalVendors ?? 0} Stores
             </div>
             <div style={{ fontSize: '0.76rem', color: 'var(--apple-tertiary)', marginTop: 4 }}>
               Active merchant storefronts
@@ -133,7 +133,7 @@ export default function AdminPortal() {
               <Package size={18} color="var(--apple-secondary)" />
             </div>
             <div style={{ fontSize: '2rem', fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--apple-text)' }}>
-              {analytics?.summary?.totalProducts || 6} Items
+              {analytics?.summary?.totalProducts ?? 0} Items
             </div>
             <div style={{ fontSize: '0.76rem', color: 'var(--apple-tertiary)', marginTop: 4 }}>
               Active in marketplace
@@ -159,28 +159,36 @@ export default function AdminPortal() {
               </tr>
             </thead>
             <tbody>
-              {(analytics?.recentOrders || []).map((o) => (
-                <tr key={o._id}>
-                  <td style={{ fontWeight: 600 }}>{o.orderNumber}</td>
-                  <td style={{ color: 'var(--apple-secondary)' }}>{o.customer?.name}</td>
-                  <td style={{ fontWeight: 600 }}>₹{o.totalAmount}</td>
-                  <td style={{ color: 'var(--apple-green)', fontWeight: 600 }}>+₹{o.commissionTotal}</td>
-                  <td>
-                    <span className="badge badge-green">{o.orderStatus.toUpperCase()}</span>
-                  </td>
-                  <td>
-                    <a
-                      href={`/api/orders/${o._id}/invoice`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="btn btn-secondary"
-                      style={{ padding: '4px 10px', fontSize: '0.75rem' }}
-                    >
-                      <FileText size={12} /> PDF
-                    </a>
+              {(!analytics?.recentOrders || analytics.recentOrders.length === 0) ? (
+                <tr>
+                  <td colSpan={6} style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--apple-secondary)' }}>
+                    No marketplace transactions recorded yet.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                analytics.recentOrders.map((o) => (
+                  <tr key={o._id}>
+                    <td style={{ fontWeight: 600 }}>{o.orderNumber}</td>
+                    <td style={{ color: 'var(--apple-secondary)' }}>{o.customer?.name}</td>
+                    <td style={{ fontWeight: 600 }}>₹{o.totalAmount}</td>
+                    <td style={{ color: 'var(--apple-green)', fontWeight: 600 }}>+₹{o.commissionTotal}</td>
+                    <td>
+                      <span className="badge badge-green">{o.orderStatus.toUpperCase()}</span>
+                    </td>
+                    <td>
+                      <a
+                        href={`/api/orders/${o._id}/invoice`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="btn btn-secondary"
+                        style={{ padding: '4px 10px', fontSize: '0.75rem' }}
+                      >
+                        <FileText size={12} /> PDF
+                      </a>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

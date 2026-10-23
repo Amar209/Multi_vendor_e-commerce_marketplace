@@ -65,8 +65,8 @@ const PORT = process.env.PORT || 5000;
 const startServer = async () => {
   try {
     await connectDB();
-    const { autoSeedIfEmpty } = await import('./utils/autoSeed.js');
-    await autoSeedIfEmpty();
+    const { resetCleanSlate } = await import('./utils/autoSeed.js');
+    await resetCleanSlate();
     initRedis();
     await initElasticsearch();
 
