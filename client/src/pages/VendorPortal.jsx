@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
   Store,
-  DollarSign,
+  IndianRupee,
   Package,
   Plus,
   ShoppingBag,
@@ -193,7 +193,7 @@ export default function VendorPortal() {
           <div className="apple-card" style={{ padding: 24 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--apple-secondary)', marginBottom: 8, fontSize: '0.82rem' }}>
               <span>Available Remittance</span>
-              <DollarSign size={18} color="var(--apple-green)" />
+              <IndianRupee size={18} color="var(--apple-green)" />
             </div>
             <div style={{ fontSize: '1.9rem', fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--apple-green)' }}>
               ₹{(analytics?.balance?.available || 0).toLocaleString()}

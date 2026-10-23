@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import {
   ShieldCheck,
   TrendingUp,
-  DollarSign,
+  IndianRupee,
   Store,
   Package,
   FileText,
@@ -91,7 +91,7 @@ export default function AdminPortal() {
           <div className="apple-card" style={{ padding: 24 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--apple-secondary)', marginBottom: 8, fontSize: '0.82rem' }}>
               <span>Platform Commissions Retained</span>
-              <DollarSign size={18} color="var(--apple-green)" />
+              <IndianRupee size={18} color="var(--apple-green)" />
             </div>
             <div style={{ fontSize: '2rem', fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--apple-green)' }}>
               ₹{(analytics?.summary?.platformCommissions || 0).toLocaleString()}
