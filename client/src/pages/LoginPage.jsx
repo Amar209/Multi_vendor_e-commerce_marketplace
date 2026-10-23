@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Sparkles, Store, ShieldCheck, User, Lock, Mail, ArrowRight } from 'lucide-react';
+import { Layers, Store, ShieldCheck, User, Lock, Mail, ArrowRight } from 'lucide-react';
 
 export default function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
 
   const [roleTab, setRoleTab] = useState('customer'); // 'customer' | 'vendor' | 'admin'
   const [email, setEmail] = useState('customer@example.com');
@@ -14,7 +13,6 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Quick fill credentials based on role tab
   const handleTabChange = (role) => {
     setRoleTab(role);
     setError('');
@@ -38,18 +36,13 @@ export default function LoginPage() {
     try {
       const result = await login(email, password);
       if (result.success) {
-        // Redirect to respective portal based on user role
-        if (result.user.role === 'admin') {
-          navigate('/admin');
-        } else if (result.user.role === 'vendor') {
-          navigate('/vendor');
-        } else {
-          navigate('/');
-        }
+        if (result.user.role === 'admin') navigate('/admin');
+        else if (result.user.role === 'vendor') navigate('/vendor');
+        else navigate('/');
       } else {
-        setError(result.message || 'Invalid email or password.');
+        setError(result.message || 'Invalid credentials.');
       }
-    } catch (err) {
+    } catch {
       setError('Connection error. Please try again.');
     } finally {
       setIsSubmitting(false);
@@ -57,128 +50,125 @@ export default function LoginPage() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, background: 'var(--bg-dark)' }}>
-      <div className="glass-card" style={{ maxWidth: 460, width: '100%', padding: 36 }}>
-        {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: 28 }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, background: 'var(--apple-bg)' }}>
+      <div className="apple-card" style={{ maxWidth: 420, width: '100%', padding: 36 }}>
+        {/* Apple Logo Icon */}
+        <div style={{ textAlign: 'center', marginBottom: 24 }}>
           <div
             style={{
-              width: 50,
-              height: 50,
-              borderRadius: 14,
-              background: 'linear-gradient(135deg, #6366f1, #06b6d4)',
+              width: 44,
+              height: 44,
+              borderRadius: 10,
+              background: '#1c1c1f',
+              border: '1px solid var(--apple-hairline)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               margin: '0 auto 16px',
-              boxShadow: '0 8px 24px rgba(99, 102, 241, 0.35)'
+              color: 'var(--apple-text)'
             }}
           >
-            <Sparkles size={26} color="#ffffff" />
+            <Layers size={22} />
           </div>
-          <h1 className="heading-display" style={{ fontSize: '1.8rem', marginBottom: 6 }}>Welcome to MarketPulse</h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Sign in to access your dedicated portal</p>
+          <h1 style={{ fontSize: '1.45rem', fontWeight: 600, letterSpacing: '-0.025em', marginBottom: 6 }}>
+            Sign in to MarketPulse
+          </h1>
+          <p style={{ color: 'var(--apple-secondary)', fontSize: '0.84rem' }}>
+            Enter your credentials to access your portal
+          </p>
         </div>
 
-        {/* Role Selector Tabs */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6, background: 'rgba(255, 255, 255, 0.04)', padding: 4, borderRadius: 10, marginBottom: 24, border: '1px solid var(--border-subtle)' }}>
+        {/* Apple Segmented Switcher */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 4, background: 'rgba(255, 255, 255, 0.04)', padding: 3, borderRadius: 10, marginBottom: 24, border: '1px solid var(--apple-hairline)' }}>
           <button
             type="button"
             className="btn"
             style={{
-              padding: '8px 10px',
-              fontSize: '0.8rem',
+              padding: '6px 8px',
+              fontSize: '0.78rem',
               borderRadius: 8,
-              background: roleTab === 'customer' ? 'var(--primary)' : 'transparent',
-              color: roleTab === 'customer' ? '#ffffff' : 'var(--text-muted)'
+              background: roleTab === 'customer' ? 'rgba(255, 255, 255, 0.12)' : 'transparent',
+              color: roleTab === 'customer' ? 'var(--apple-text)' : 'var(--apple-secondary)'
             }}
             onClick={() => handleTabChange('customer')}
           >
-            <User size={14} /> Shopper
+            Shopper
           </button>
           <button
             type="button"
             className="btn"
             style={{
-              padding: '8px 10px',
-              fontSize: '0.8rem',
+              padding: '6px 8px',
+              fontSize: '0.78rem',
               borderRadius: 8,
-              background: roleTab === 'vendor' ? 'var(--primary)' : 'transparent',
-              color: roleTab === 'vendor' ? '#ffffff' : 'var(--text-muted)'
+              background: roleTab === 'vendor' ? 'rgba(255, 255, 255, 0.12)' : 'transparent',
+              color: roleTab === 'vendor' ? 'var(--apple-text)' : 'var(--apple-secondary)'
             }}
             onClick={() => handleTabChange('vendor')}
           >
-            <Store size={14} /> Vendor
+            Merchant
           </button>
           <button
             type="button"
             className="btn"
             style={{
-              padding: '8px 10px',
-              fontSize: '0.8rem',
+              padding: '6px 8px',
+              fontSize: '0.78rem',
               borderRadius: 8,
-              background: roleTab === 'admin' ? 'var(--primary)' : 'transparent',
-              color: roleTab === 'admin' ? '#ffffff' : 'var(--text-muted)'
+              background: roleTab === 'admin' ? 'rgba(255, 255, 255, 0.12)' : 'transparent',
+              color: roleTab === 'admin' ? 'var(--apple-text)' : 'var(--apple-secondary)'
             }}
             onClick={() => handleTabChange('admin')}
           >
-            <ShieldCheck size={14} /> Admin
+            Admin
           </button>
         </div>
 
         {error && (
-          <div style={{ background: 'rgba(244, 63, 94, 0.15)', border: '1px solid rgba(244, 63, 94, 0.3)', color: '#fca5a5', padding: '10px 14px', borderRadius: 8, fontSize: '0.85rem', marginBottom: 18 }}>
+          <div style={{ background: 'var(--apple-red-subtle)', border: '1px solid rgba(255, 69, 58, 0.25)', color: '#ff6961', padding: '10px 14px', borderRadius: 8, fontSize: '0.82rem', marginBottom: 18 }}>
             {error}
           </div>
         )}
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label className="form-label">Email Address</label>
-            <div style={{ position: 'relative' }}>
-              <Mail size={16} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-dim)' }} />
-              <input
-                type="email"
-                required
-                className="form-input"
-                style={{ paddingLeft: 42 }}
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
+            <label className="form-label">Email</label>
+            <input
+              type="email"
+              required
+              className="form-input"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
           </div>
 
           <div className="form-group" style={{ marginBottom: 24 }}>
             <label className="form-label">Password</label>
-            <div style={{ position: 'relative' }}>
-              <Lock size={16} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-dim)' }} />
-              <input
-                type="password"
-                required
-                className="form-input"
-                style={{ paddingLeft: 42 }}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
+            <input
+              type="password"
+              required
+              className="form-input"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
           </div>
 
           <button
             type="submit"
             className="btn btn-primary"
-            style={{ width: '100%', padding: '12px', fontSize: '0.95rem' }}
+            style={{ width: '100%', padding: '10px', fontSize: '0.9rem' }}
             disabled={isSubmitting}
           >
-            {isSubmitting ? 'Authenticating...' : `Enter as ${roleTab === 'customer' ? 'Customer' : roleTab === 'vendor' ? 'Vendor Portal' : 'Admin Console'}`} <ArrowRight size={16} />
+            {isSubmitting ? 'Signing in...' : `Sign in to ${roleTab === 'customer' ? 'Storefront' : roleTab === 'vendor' ? 'Seller Central' : 'Admin Console'}`}
           </button>
         </form>
 
-        <div style={{ textAlign: 'center', marginTop: 24 }}>
+        <div style={{ textAlign: 'center', marginTop: 22 }}>
           <a
             href="/"
-            style={{ color: 'var(--text-dim)', fontSize: '0.85rem', textDecoration: 'none' }}
+            style={{ color: 'var(--apple-secondary)', fontSize: '0.8rem', textDecoration: 'none' }}
           >
-            ← Back to Public Marketplace
+            ← Return to Storefront
           </a>
         </div>
       </div>

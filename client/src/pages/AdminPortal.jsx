@@ -9,8 +9,7 @@ import {
   Package,
   FileText,
   LogOut,
-  ExternalLink,
-  Users
+  ExternalLink
 } from 'lucide-react';
 
 export default function AdminPortal() {
@@ -45,139 +44,139 @@ export default function AdminPortal() {
   }, [token]);
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--bg-dark)' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--apple-bg)' }}>
       {/* Header */}
-      <header className="glass-nav" style={{ position: 'sticky', top: 0, zIndex: 100 }}>
-        <div className="nav-container" style={{ maxWidth: 1400 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div className="logo-badge" style={{ background: 'linear-gradient(135deg, #6366f1, #a855f7)' }}>
-              <ShieldCheck size={22} color="#ffffff" />
+      <header className="apple-nav" style={{ position: 'sticky', top: 0, zIndex: 100 }}>
+        <div className="nav-container" style={{ maxWidth: 1240 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div className="logo-icon">
+              <ShieldCheck size={16} />
             </div>
-            <div style={{ fontWeight: 800, fontSize: '1.25rem', color: '#ffffff' }}>
-              MarketPulse Console <span style={{ color: 'var(--primary-light)', fontSize: '0.85rem' }}>• Master Platform Administration</span>
+            <div style={{ fontWeight: 600, fontSize: '0.98rem' }}>
+              MarketPulse Console <span style={{ color: 'var(--apple-secondary)', fontWeight: 400 }}>• Platform Administration</span>
             </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-            <button className="btn btn-secondary" onClick={() => navigate('/')}>
-              <ExternalLink size={16} /> Public Storefront
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <button className="btn btn-secondary" style={{ padding: '6px 14px' }} onClick={() => navigate('/')}>
+              <ExternalLink size={14} /> Public Storefront
             </button>
             <button
               className="btn btn-secondary"
-              style={{ color: 'var(--accent-rose)', borderColor: 'rgba(244, 63, 94, 0.3)' }}
+              style={{ padding: '6px 12px', color: 'var(--apple-secondary)' }}
               onClick={() => {
                 logout();
                 navigate('/login');
               }}
             >
-              <LogOut size={16} /> Sign Out
+              <LogOut size={14} /> Sign Out
             </button>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="main-wrapper" style={{ maxWidth: 1400, flex: 1 }}>
-        <div style={{ marginBottom: 28 }}>
-          <h1 className="heading-display" style={{ fontSize: '2.2rem', marginBottom: 6 }}>
-            Platform Revenue & System Overview
+      <main className="main-wrapper" style={{ maxWidth: 1240, flex: 1 }}>
+        <div style={{ marginBottom: 32 }}>
+          <h1 style={{ fontSize: '2rem', fontWeight: 600, letterSpacing: '-0.025em', marginBottom: 4 }}>
+            Platform Revenue & Telemetry
           </h1>
-          <p style={{ color: 'var(--text-muted)' }}>
-            Real-time multi-vendor transactions, Gross Merchandise Value (GMV), and 10% platform commission accounting.
+          <p style={{ color: 'var(--apple-secondary)', fontSize: '0.86rem' }}>
+            Consolidated Gross Merchandise Value (GMV), 10% platform commission retention, and multi-vendor settlements.
           </p>
         </div>
 
         {/* Master Metrics Grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 20, marginBottom: 36 }}>
-          <div className="glass-card" style={{ padding: 24 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)', marginBottom: 12 }}>
-              <span>Platform Commissions Collected</span>
-              <DollarSign size={22} color="#34d399" />
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 20, marginBottom: 40 }}>
+          <div className="apple-card" style={{ padding: 24 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--apple-secondary)', marginBottom: 8, fontSize: '0.82rem' }}>
+              <span>Platform Commissions Retained</span>
+              <DollarSign size={18} color="var(--apple-green)" />
             </div>
-            <div style={{ fontSize: '2rem', fontWeight: 800, color: '#34d399' }}>
+            <div style={{ fontSize: '2rem', fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--apple-green)' }}>
               ₹{(analytics?.summary?.platformCommissions || 0).toLocaleString()}
             </div>
-            <div style={{ fontSize: '0.8rem', color: 'var(--text-dim)', marginTop: 4 }}>
-              Net retained revenue across all vendors (10%)
+            <div style={{ fontSize: '0.76rem', color: 'var(--apple-tertiary)', marginTop: 4 }}>
+              Net 10% marketplace revenue
             </div>
           </div>
 
-          <div className="glass-card" style={{ padding: 24 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)', marginBottom: 12 }}>
+          <div className="apple-card" style={{ padding: 24 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--apple-secondary)', marginBottom: 8, fontSize: '0.82rem' }}>
               <span>Gross Merchandise Value (GMV)</span>
-              <TrendingUp size={22} color="var(--primary-light)" />
+              <TrendingUp size={18} color="#2997ff" />
             </div>
-            <div style={{ fontSize: '2rem', fontWeight: 800, color: '#ffffff' }}>
+            <div style={{ fontSize: '2rem', fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--apple-text)' }}>
               ₹{(analytics?.summary?.grossMerchandiseValue || 0).toLocaleString()}
             </div>
-            <div style={{ fontSize: '0.8rem', color: 'var(--text-dim)', marginTop: 4 }}>
-              Total consumer spending processed
+            <div style={{ fontSize: '0.76rem', color: 'var(--apple-tertiary)', marginTop: 4 }}>
+              Total consumer transaction volume
             </div>
           </div>
 
-          <div className="glass-card" style={{ padding: 24 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)', marginBottom: 12 }}>
-              <span>Active Vendors</span>
-              <Store size={22} color="var(--accent-cyan)" />
+          <div className="apple-card" style={{ padding: 24 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--apple-secondary)', marginBottom: 8, fontSize: '0.82rem' }}>
+              <span>Authorized Vendors</span>
+              <Store size={18} color="var(--apple-amber)" />
             </div>
-            <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--accent-cyan)' }}>
+            <div style={{ fontSize: '2rem', fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--apple-text)' }}>
               {analytics?.summary?.totalVendors || 2} Stores
             </div>
-            <div style={{ fontSize: '0.8rem', color: 'var(--text-dim)', marginTop: 4 }}>
-              Onboarded & authorized merchant accounts
+            <div style={{ fontSize: '0.76rem', color: 'var(--apple-tertiary)', marginTop: 4 }}>
+              Active merchant storefronts
             </div>
           </div>
 
-          <div className="glass-card" style={{ padding: 24 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)', marginBottom: 12 }}>
-              <span>Catalog Products</span>
-              <Package size={22} color="var(--accent-amber)" />
+          <div className="apple-card" style={{ padding: 24 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--apple-secondary)', marginBottom: 8, fontSize: '0.82rem' }}>
+              <span>Catalog Size</span>
+              <Package size={18} color="var(--apple-secondary)" />
             </div>
-            <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--accent-amber)' }}>
+            <div style={{ fontSize: '2rem', fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--apple-text)' }}>
               {analytics?.summary?.totalProducts || 6} Items
             </div>
-            <div style={{ fontSize: '0.8rem', color: 'var(--text-dim)', marginTop: 4 }}>
-              Synchronized in search engine
+            <div style={{ fontSize: '0.76rem', color: 'var(--apple-tertiary)', marginTop: 4 }}>
+              Live in search index
             </div>
           </div>
         </div>
 
-        {/* Platform Transaction Audit Log */}
-        <h2 className="heading-display" style={{ fontSize: '1.4rem', marginBottom: 16 }}>
-          Platform Financial Audit Log
+        {/* Audit Log Table */}
+        <h2 style={{ fontSize: '1.25rem', fontWeight: 600, letterSpacing: '-0.02em', marginBottom: 16 }}>
+          Platform Financial Transactions
         </h2>
 
-        <div className="glass-card" style={{ overflow: 'hidden' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.88rem' }}>
+        <div className="apple-card" style={{ overflow: 'hidden' }}>
+          <table className="apple-table">
             <thead>
-              <tr style={{ borderBottom: '1px solid var(--border-subtle)', background: 'rgba(255, 255, 255, 0.02)' }}>
-                <th style={{ padding: '16px 22px', color: 'var(--text-muted)' }}>Order ID</th>
-                <th style={{ padding: '16px 22px', color: 'var(--text-muted)' }}>Customer</th>
-                <th style={{ padding: '16px 22px', color: 'var(--text-muted)' }}>Gross Amount</th>
-                <th style={{ padding: '16px 22px', color: 'var(--text-muted)' }}>Platform Cut (10%)</th>
-                <th style={{ padding: '16px 22px', color: 'var(--text-muted)' }}>Status</th>
-                <th style={{ padding: '16px 22px', color: 'var(--text-muted)' }}>Invoice</th>
+              <tr>
+                <th>Order Number</th>
+                <th>Customer</th>
+                <th>Gross Total</th>
+                <th>Platform Commission (10%)</th>
+                <th>Status</th>
+                <th>Tax Invoice</th>
               </tr>
             </thead>
             <tbody>
               {(analytics?.recentOrders || []).map((o) => (
-                <tr key={o._id} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                  <td style={{ padding: '16px 22px', fontWeight: 700 }}>{o.orderNumber}</td>
-                  <td style={{ padding: '16px 22px' }}>{o.customer?.name}</td>
-                  <td style={{ padding: '16px 22px', fontWeight: 700 }}>₹{o.totalAmount}</td>
-                  <td style={{ padding: '16px 22px', color: '#34d399', fontWeight: 700 }}>+₹{o.commissionTotal}</td>
-                  <td style={{ padding: '16px 22px' }}>
-                    <span className="badge badge-emerald">{o.orderStatus.toUpperCase()}</span>
+                <tr key={o._id}>
+                  <td style={{ fontWeight: 600 }}>{o.orderNumber}</td>
+                  <td style={{ color: 'var(--apple-secondary)' }}>{o.customer?.name}</td>
+                  <td style={{ fontWeight: 600 }}>₹{o.totalAmount}</td>
+                  <td style={{ color: 'var(--apple-green)', fontWeight: 600 }}>+₹{o.commissionTotal}</td>
+                  <td>
+                    <span className="badge badge-green">{o.orderStatus.toUpperCase()}</span>
                   </td>
-                  <td style={{ padding: '16px 22px' }}>
+                  <td>
                     <a
                       href={`/api/orders/${o._id}/invoice`}
                       target="_blank"
                       rel="noreferrer"
                       className="btn btn-secondary"
-                      style={{ padding: '6px 12px', fontSize: '0.8rem' }}
+                      style={{ padding: '4px 10px', fontSize: '0.75rem' }}
                     >
-                      <FileText size={14} /> PDF Invoice
+                      <FileText size={12} /> PDF
                     </a>
                   </td>
                 </tr>

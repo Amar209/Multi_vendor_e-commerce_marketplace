@@ -13,12 +13,11 @@ import {
   ExternalLink,
   X,
   Trash2,
-  RefreshCw,
-  Sparkles
+  Layers
 } from 'lucide-react';
 
 export default function VendorPortal() {
-  const { user, token, logout } = useAuth();
+  const { token, logout } = useAuth();
   const navigate = useNavigate();
 
   const [products, setProducts] = useState([]);
@@ -125,7 +124,7 @@ export default function VendorPortal() {
   };
 
   const handleDeleteProduct = async (id) => {
-    if (!window.confirm('Are you sure you want to remove this product from the marketplace?')) return;
+    if (!window.confirm('Remove this product listing?')) return;
     try {
       const res = await fetch(`/api/products/${id}`, {
         method: 'DELETE',
@@ -141,125 +140,123 @@ export default function VendorPortal() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--bg-dark)' }}>
-      {/* Merchant Top Bar */}
-      <header className="glass-nav" style={{ position: 'sticky', top: 0, zIndex: 100 }}>
-        <div className="nav-container" style={{ maxWidth: 1400 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div className="logo-badge" style={{ background: 'linear-gradient(135deg, #10b981, #06b6d4)' }}>
-              <Store size={22} color="#ffffff" />
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--apple-bg)' }}>
+      {/* Apple macOS style Navbar */}
+      <header className="apple-nav" style={{ position: 'sticky', top: 0, zIndex: 100 }}>
+        <div className="nav-container" style={{ maxWidth: 1240 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div className="logo-icon">
+              <Store size={15} />
             </div>
-            <div>
-              <div style={{ fontWeight: 800, fontSize: '1.25rem', color: '#ffffff' }}>
-                Seller Central <span style={{ color: '#34d399', fontSize: '0.85rem' }}>• {analytics?.storeName || 'Merchant Portal'}</span>
-              </div>
+            <div style={{ fontWeight: 600, fontSize: '0.98rem' }}>
+              Seller Central <span style={{ color: 'var(--apple-secondary)', fontWeight: 400 }}>• {analytics?.storeName || 'Merchant'}</span>
             </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-            <button className="btn btn-secondary" onClick={() => navigate('/')}>
-              <ExternalLink size={16} /> View Public Storefront
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <button className="btn btn-secondary" style={{ padding: '6px 14px' }} onClick={() => navigate('/')}>
+              <ExternalLink size={14} /> Storefront
             </button>
             <button
               className="btn btn-secondary"
-              style={{ color: 'var(--accent-rose)', borderColor: 'rgba(244, 63, 94, 0.3)' }}
+              style={{ padding: '6px 12px', color: 'var(--apple-secondary)' }}
               onClick={() => {
                 logout();
                 navigate('/login');
               }}
             >
-              <LogOut size={16} /> Sign Out
+              <LogOut size={14} /> Sign Out
             </button>
           </div>
         </div>
       </header>
 
-      {/* Main Content Area */}
-      <main className="main-wrapper" style={{ maxWidth: 1400, flex: 1 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 }}>
+      {/* Main Content */}
+      <main className="main-wrapper" style={{ maxWidth: 1240, flex: 1 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
           <div>
-            <h1 className="heading-display" style={{ fontSize: '2.2rem', marginBottom: 6 }}>
-              {analytics?.storeName || 'Merchant Dashboard'}
+            <h1 style={{ fontSize: '2rem', fontWeight: 600, letterSpacing: '-0.025em', marginBottom: 4 }}>
+              {analytics?.storeName || 'Merchant Operations'}
             </h1>
-            <p style={{ color: 'var(--text-muted)' }}>
-              Platform Commission Rate: <strong style={{ color: 'var(--accent-cyan)' }}>{analytics?.commissionRate || 10}%</strong> | Net Vendor Earnings: <strong style={{ color: '#34d399' }}>90%</strong>
+            <p style={{ color: 'var(--apple-secondary)', fontSize: '0.86rem' }}>
+              Platform Commission: <strong style={{ color: 'var(--apple-text)' }}>{analytics?.commissionRate || 10}%</strong> • Net Merchant Share: <strong style={{ color: 'var(--apple-green)' }}>90%</strong>
             </p>
           </div>
 
-          <button className="btn btn-emerald" onClick={() => setIsAddOpen(true)}>
-            <Plus size={18} /> Publish New Product
+          <button className="btn btn-primary" onClick={() => setIsAddOpen(true)}>
+            <Plus size={16} /> Publish Listing
           </button>
         </div>
 
-        {/* Ledger Balance Cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 20, marginBottom: 36 }}>
-          <div className="glass-card" style={{ padding: 24 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)', marginBottom: 12 }}>
-              <span>Available Payout Balance</span>
-              <DollarSign size={22} color="#34d399" />
+        {/* Apple macOS Card Grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 20, marginBottom: 40 }}>
+          <div className="apple-card" style={{ padding: 24 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--apple-secondary)', marginBottom: 8, fontSize: '0.82rem' }}>
+              <span>Available Remittance</span>
+              <DollarSign size={18} color="var(--apple-green)" />
             </div>
-            <div style={{ fontSize: '2rem', fontWeight: 800, color: '#34d399' }}>
+            <div style={{ fontSize: '1.9rem', fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--apple-green)' }}>
               ₹{(analytics?.balance?.available || 0).toLocaleString()}
             </div>
-            <div style={{ fontSize: '0.8rem', color: 'var(--text-dim)', marginTop: 4 }}>
-              Net earnings ready for simulated bank payout
+            <div style={{ fontSize: '0.76rem', color: 'var(--apple-tertiary)', marginTop: 4 }}>
+              Cleared for simulated direct transfer
             </div>
           </div>
 
-          <div className="glass-card" style={{ padding: 24 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)', marginBottom: 12 }}>
+          <div className="apple-card" style={{ padding: 24 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--apple-secondary)', marginBottom: 8, fontSize: '0.82rem' }}>
               <span>Gross Sales Volume</span>
-              <ShoppingBag size={22} color="var(--primary-light)" />
+              <ShoppingBag size={18} color="#2997ff" />
             </div>
-            <div style={{ fontSize: '2rem', fontWeight: 800, color: '#ffffff' }}>
+            <div style={{ fontSize: '1.9rem', fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--apple-text)' }}>
               ₹{(analytics?.totalVendorSales || 0).toLocaleString()}
             </div>
-            <div style={{ fontSize: '0.8rem', color: 'var(--text-dim)', marginTop: 4 }}>
-              Across {analytics?.totalOrdersCount || 0} customer orders
+            <div style={{ fontSize: '0.76rem', color: 'var(--apple-tertiary)', marginTop: 4 }}>
+              From {analytics?.totalOrdersCount || 0} customer transactions
             </div>
           </div>
 
-          <div className="glass-card" style={{ padding: 24 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)', marginBottom: 12 }}>
+          <div className="apple-card" style={{ padding: 24 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--apple-secondary)', marginBottom: 8, fontSize: '0.82rem' }}>
               <span>Active Catalog Listings</span>
-              <Package size={22} color="var(--accent-cyan)" />
+              <Package size={18} color="var(--apple-amber)" />
             </div>
-            <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--accent-cyan)' }}>
-              {products.length} Items Listed
+            <div style={{ fontSize: '1.9rem', fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--apple-text)' }}>
+              {products.length} Products
             </div>
-            <div style={{ fontSize: '0.8rem', color: 'var(--text-dim)', marginTop: 4 }}>
-              Synced with Elasticsearch cluster
+            <div style={{ fontSize: '0.76rem', color: 'var(--apple-tertiary)', marginTop: 4 }}>
+              Indexed in Elasticsearch cluster
             </div>
           </div>
         </div>
 
-        {/* Incoming Orders Section */}
-        <div style={{ marginBottom: 40 }}>
-          <h2 className="heading-display" style={{ fontSize: '1.4rem', marginBottom: 16 }}>
-            Incoming Orders to Fulfill & Split Payouts
+        {/* Fulfillment Pipeline */}
+        <div style={{ marginBottom: 44 }}>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: 600, letterSpacing: '-0.02em', marginBottom: 16 }}>
+            Fulfillment & Multi-Vendor Payouts
           </h2>
 
           {orders.length === 0 ? (
-            <div className="glass-card" style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>
-              <Package size={36} style={{ margin: '0 auto 12px', opacity: 0.4 }} />
-              <p>No incoming orders yet. When customers purchase your items, they will appear here with split revenue!</p>
+            <div className="apple-card" style={{ padding: 40, textAlign: 'center', color: 'var(--apple-secondary)' }}>
+              <Package size={36} style={{ margin: '0 auto 12px', opacity: 0.3 }} />
+              <p style={{ fontSize: '0.88rem' }}>No orders currently requiring fulfillment.</p>
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               {orders.map((order) => (
-                <div key={order._id} className="glass-card" style={{ padding: 22 }}>
+                <div key={order._id} className="apple-card" style={{ padding: 20 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
                     <div>
-                      <span style={{ fontWeight: 800, fontSize: '1.05rem', color: '#ffffff' }}>
-                        Order #{order.orderNumber}
+                      <span style={{ fontWeight: 600, fontSize: '0.98rem' }}>
+                        Order {order.orderNumber}
                       </span>
-                      <span style={{ fontSize: '0.82rem', color: 'var(--text-dim)', marginLeft: 12 }}>
-                        Customer: {order.customer?.name} ({order.customer?.email})
+                      <span style={{ fontSize: '0.78rem', color: 'var(--apple-secondary)', marginLeft: 12 }}>
+                        Customer: {order.customer?.name}
                       </span>
                     </div>
-                    <div className="badge badge-emerald">
-                      Net Store Share: ₹{order.vendorTotalEarnings.toLocaleString()}
-                    </div>
+                    <span className="badge badge-green">
+                      Net Payout: ₹{order.vendorTotalEarnings.toLocaleString()}
+                    </span>
                   </div>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -270,53 +267,53 @@ export default function VendorPortal() {
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'space-between',
-                          padding: '12px 16px',
-                          background: 'rgba(255, 255, 255, 0.03)',
-                          borderRadius: 8
+                          padding: '10px 14px',
+                          background: 'rgba(255, 255, 255, 0.02)',
+                          borderRadius: 10
                         }}
                       >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                          <img src={item.image} alt={item.title} style={{ width: 48, height: 48, borderRadius: 8, objectFit: 'cover' }} />
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                          <img src={item.image} alt={item.title} style={{ width: 44, height: 44, borderRadius: 8, objectFit: 'cover' }} />
                           <div>
-                            <div style={{ fontWeight: 600, fontSize: '0.92rem' }}>{item.title}</div>
-                            <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                              Qty: {item.quantity} | Unit Price: ₹{item.price} | Platform Cut (10%): -₹{item.platformCommissionAmount}
+                            <div style={{ fontWeight: 500, fontSize: '0.88rem' }}>{item.title}</div>
+                            <div style={{ fontSize: '0.74rem', color: 'var(--apple-secondary)' }}>
+                              Qty: {item.quantity} • Price: ₹{item.price} • Fee (10%): -₹{item.platformCommissionAmount}
                             </div>
                           </div>
                         </div>
 
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                          <span className={`badge ${item.vendorFulfillmentStatus === 'delivered' ? 'badge-emerald' : 'badge-amber'}`}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <span className={`badge ${item.vendorFulfillmentStatus === 'delivered' ? 'badge-green' : 'badge-amber'}`}>
                             {item.vendorFulfillmentStatus.toUpperCase()}
                           </span>
 
                           {item.vendorFulfillmentStatus === 'placed' && (
                             <button
                               className="btn btn-secondary"
-                              style={{ padding: '6px 12px', fontSize: '0.8rem' }}
+                              style={{ padding: '4px 10px', fontSize: '0.75rem' }}
                               onClick={() => advanceFulfillment(order._id, item._id, 'packed')}
                             >
-                              Mark Packed
+                              Pack
                             </button>
                           )}
 
                           {item.vendorFulfillmentStatus === 'packed' && (
                             <button
                               className="btn btn-secondary"
-                              style={{ padding: '6px 12px', fontSize: '0.8rem' }}
+                              style={{ padding: '4px 10px', fontSize: '0.75rem' }}
                               onClick={() => advanceFulfillment(order._id, item._id, 'shipped')}
                             >
-                              <Truck size={14} /> Mark Shipped
+                              <Truck size={12} /> Ship
                             </button>
                           )}
 
                           {item.vendorFulfillmentStatus === 'shipped' && (
                             <button
-                              className="btn btn-emerald"
-                              style={{ padding: '6px 12px', fontSize: '0.8rem' }}
+                              className="btn btn-primary"
+                              style={{ padding: '4px 10px', fontSize: '0.75rem' }}
                               onClick={() => advanceFulfillment(order._id, item._id, 'delivered')}
                             >
-                              <CheckCircle size={14} /> Mark Delivered
+                              <CheckCircle size={12} /> Deliver
                             </button>
                           )}
                         </div>
@@ -329,34 +326,34 @@ export default function VendorPortal() {
           )}
         </div>
 
-        {/* Product Catalog Management */}
+        {/* Store Catalog */}
         <div>
-          <h2 className="heading-display" style={{ fontSize: '1.4rem', marginBottom: 16 }}>
-            My Store Inventory ({products.length})
+          <h2 style={{ fontSize: '1.25rem', fontWeight: 600, letterSpacing: '-0.02em', marginBottom: 16 }}>
+            Active Inventory ({products.length})
           </h2>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 20 }}>
             {products.map((p) => (
-              <div key={p._id} className="glass-card" style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+              <div key={p._id} className="apple-card" style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
                 <img src={p.images[0]} alt={p.title} style={{ width: '100%', height: 180, objectFit: 'cover' }} />
                 <div style={{ padding: 18, display: 'flex', flexDirection: 'column', flex: 1 }}>
-                  <span className="badge badge-indigo" style={{ marginBottom: 6, alignSelf: 'flex-start' }}>
+                  <span className="badge badge-gray" style={{ marginBottom: 8, alignSelf: 'flex-start' }}>
                     {p.category}
                   </span>
-                  <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: 8, height: 42, overflow: 'hidden' }}>
+                  <h3 style={{ fontSize: '0.98rem', fontWeight: 600, marginBottom: 8, height: 42, overflow: 'hidden' }}>
                     {p.title}
                   </h3>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', paddingTop: 10 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', paddingTop: 12 }}>
                     <div>
-                      <span style={{ fontSize: '1.15rem', fontWeight: 800 }}>₹{p.price.toLocaleString()}</span>
-                      <div style={{ fontSize: '0.78rem', color: '#34d399' }}>Stock: {p.stock} units</div>
+                      <span style={{ fontSize: '1.15rem', fontWeight: 700 }}>₹{p.price.toLocaleString()}</span>
+                      <div style={{ fontSize: '0.74rem', color: 'var(--apple-green)' }}>Stock: {p.stock} units</div>
                     </div>
                     <button
                       className="btn btn-secondary"
-                      style={{ color: 'var(--accent-rose)', padding: '6px 10px' }}
+                      style={{ padding: '6px 10px', color: 'var(--apple-secondary)' }}
                       onClick={() => handleDeleteProduct(p._id)}
                     >
-                      <Trash2 size={16} />
+                      <Trash2 size={14} />
                     </button>
                   </div>
                 </div>
@@ -366,34 +363,34 @@ export default function VendorPortal() {
         </div>
       </main>
 
-      {/* Add Product Modal */}
+      {/* Product Upload Modal */}
       {isAddOpen && (
         <div className="modal-overlay" onClick={() => setIsAddOpen(false)}>
-          <div className="modal-dialog" onClick={(e) => e.stopPropagation()} style={{ padding: 32 }}>
+          <div className="modal-dialog" onClick={(e) => e.stopPropagation()} style={{ padding: 36 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-              <h2 className="heading-display" style={{ fontSize: '1.4rem' }}>Publish Product to Marketplace</h2>
+              <h2 style={{ fontSize: '1.35rem', fontWeight: 600 }}>Create Product Listing</h2>
               <button
-                style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+                style={{ background: 'transparent', border: 'none', color: 'var(--apple-secondary)', cursor: 'pointer' }}
                 onClick={() => setIsAddOpen(false)}
               >
-                <X size={20} />
+                <X size={18} />
               </button>
             </div>
 
             <form onSubmit={handleCreateProduct}>
               <div className="form-group">
-                <label className="form-label">Product Title</label>
+                <label className="form-label">Product Name</label>
                 <input
                   type="text"
                   required
                   className="form-input"
-                  placeholder="e.g. Wireless Ergonomic Mouse"
+                  placeholder="e.g. Studio Pro Wireless Headphones"
                   value={form.title}
                   onChange={(e) => setForm({ ...form, title: e.target.value })}
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
                 <div className="form-group">
                   <label className="form-label">Category</label>
                   <select
@@ -418,7 +415,7 @@ export default function VendorPortal() {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14 }}>
                 <div className="form-group">
                   <label className="form-label">Price (₹)</label>
                   <input
@@ -443,7 +440,7 @@ export default function VendorPortal() {
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Stock Quantity</label>
+                  <label className="form-label">Stock Units</label>
                   <input
                     type="number"
                     required
@@ -456,7 +453,7 @@ export default function VendorPortal() {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Image URL (S3 / CDN)</label>
+                <label className="form-label">Product Image URL</label>
                 <input
                   type="url"
                   required
@@ -467,7 +464,7 @@ export default function VendorPortal() {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Product Description</label>
+                <label className="form-label">Specifications & Description</label>
                 <textarea
                   required
                   rows={3}
@@ -477,7 +474,7 @@ export default function VendorPortal() {
                 />
               </div>
 
-              <button type="submit" className="btn btn-emerald" style={{ width: '100%', padding: '12px' }}>
+              <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '12px' }}>
                 Publish Listing
               </button>
             </form>

@@ -5,7 +5,6 @@ import {
   ShoppingBag,
   Search,
   Store,
-  ShieldCheck,
   User,
   CheckCircle,
   Clock,
@@ -15,9 +14,10 @@ import {
   ChevronRight,
   X,
   Star,
-  RefreshCw,
   LogOut,
-  Package
+  Package,
+  Layers,
+  ArrowRight
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -159,7 +159,7 @@ export default function Storefront() {
       const data = await res.json();
       if (data.success) {
         setCompletedOrder(data.data);
-        confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 } });
+        confetti({ particleCount: 100, spread: 60, origin: { y: 0.6 } });
         fetchCart();
         fetchProducts();
       } else {
@@ -175,25 +175,25 @@ export default function Storefront() {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       {/* =========================================================================
-          STOREFRONT HEADER
+          APPLE SLIM FROSTED NAVBAR
           ========================================================================= */}
-      <header className="glass-nav" style={{ position: 'sticky', top: 0, zIndex: 100 }}>
+      <header className="apple-nav" style={{ position: 'sticky', top: 0, zIndex: 100 }}>
         <div className="nav-container">
-          {/* Logo */}
+          {/* Brand Logo */}
           <div className="logo-wrap" onClick={() => navigate('/')}>
-            <div className="logo-badge">
-              <Sparkles size={22} color="#ffffff" />
+            <div className="logo-icon">
+              <Layers size={16} />
             </div>
-            <span>Market<span style={{ color: 'var(--primary-light)' }}>Pulse</span></span>
+            <span>MarketPulse</span>
           </div>
 
-          {/* Search Bar (Elasticsearch Connected) */}
+          {/* Spotlight Search */}
           <div className="search-wrapper">
-            <Search className="search-icon" size={18} />
+            <Search className="search-icon" size={15} />
             <input
               type="text"
               className="search-input"
-              placeholder="Search products, brands, tech, fashion..."
+              placeholder="Search products, categories, creators..."
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
@@ -204,84 +204,83 @@ export default function Storefront() {
               <span
                 style={{
                   position: 'absolute',
-                  right: 12,
+                  right: 14,
                   top: '50%',
                   transform: 'translateY(-50%)',
-                  fontSize: '0.75rem',
-                  color: 'var(--primary-light)',
-                  background: 'rgba(99, 102, 241, 0.2)',
+                  fontSize: '0.72rem',
+                  color: 'var(--apple-secondary)',
+                  background: 'rgba(255, 255, 255, 0.08)',
                   padding: '2px 8px',
-                  borderRadius: 4
+                  borderRadius: 980
                 }}
               >
-                {searchSource === 'elasticsearch' ? 'Elasticsearch' : 'Search API'}
+                {searchSource === 'elasticsearch' ? 'Elasticsearch' : 'Instant Search'}
               </span>
             )}
           </div>
 
-          {/* Clean User Navigation */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          {/* Cupertino Controls */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <button
               className="btn btn-secondary"
-              style={{ padding: '8px 12px', fontSize: '0.85rem' }}
+              style={{ padding: '7px 14px' }}
               onClick={() => navigate('/vendor')}
             >
-              <Store size={15} /> Sell on MarketPulse
+              <Store size={14} /> Sell
             </button>
 
             {user ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <button
                   className="btn btn-secondary"
-                  style={{ padding: '8px 12px' }}
+                  style={{ padding: '7px 14px' }}
                   onClick={() => navigate('/my-orders')}
                 >
-                  <Package size={15} /> Orders
+                  <Package size={14} /> Orders
                 </button>
                 <button
                   className="btn btn-secondary"
-                  style={{ padding: '8px 10px', color: 'var(--accent-rose)' }}
+                  style={{ padding: '7px 10px', color: 'var(--apple-secondary)' }}
                   onClick={logout}
                   title="Sign out"
                 >
-                  <LogOut size={15} />
+                  <LogOut size={14} />
                 </button>
               </div>
             ) : (
               <button
                 className="btn btn-secondary"
-                style={{ padding: '8px 14px' }}
+                style={{ padding: '7px 14px' }}
                 onClick={() => navigate('/login')}
               >
-                <User size={15} /> Sign In
+                <User size={14} /> Sign In
               </button>
             )}
 
             {/* Cart Trigger */}
             <button
               className="btn btn-primary"
-              style={{ position: 'relative', padding: '10px 16px' }}
+              style={{ position: 'relative', padding: '7px 16px' }}
               onClick={() => setIsCartOpen(true)}
             >
-              <ShoppingBag size={18} />
+              <ShoppingBag size={15} />
               <span>Cart</span>
               {cart.itemCount > 0 && (
                 <span
                   style={{
                     position: 'absolute',
-                    top: -6,
-                    right: -6,
-                    background: 'var(--accent-rose)',
-                    color: '#fff',
-                    borderRadius: '50%',
-                    width: 22,
-                    height: 22,
+                    top: -4,
+                    right: -4,
+                    background: '#ffffff',
+                    color: '#000000',
+                    borderRadius: 980,
+                    width: 18,
+                    height: 18,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontSize: '0.75rem',
-                    fontWeight: 700,
-                    boxShadow: '0 2px 8px rgba(244, 63, 94, 0.5)'
+                    fontSize: '0.7rem',
+                    fontWeight: 700
                   }}
                 >
                   {cart.itemCount}
@@ -292,40 +291,38 @@ export default function Storefront() {
         </div>
       </header>
 
-      {/* Main Content */}
+      {/* =========================================================================
+          KEYNOTE STOREFRONT HERO
+          ========================================================================= */}
       <main className="main-wrapper" style={{ flex: 1 }}>
-        {/* Hero Section */}
-        <section className="hero-banner">
-          <div style={{ maxWidth: 650, position: 'relative', zIndex: 1 }}>
-            <div className="badge badge-indigo" style={{ marginBottom: 14 }}>
-              <Sparkles size={14} /> Multi-Vendor Marketplace
-            </div>
-            <h1 className="heading-display gradient-text" style={{ fontSize: '2.6rem', lineHeight: 1.15, marginBottom: 14 }}>
-              Direct from verified vendors, split seamlessly at checkout.
-            </h1>
-            <p style={{ color: 'var(--text-muted)', fontSize: '1.05rem', marginBottom: 24 }}>
-              Discover handcrafted fashion, audio, and accessories with instant Redis cart caching, Elasticsearch search, and automated multi-vendor order fulfillment.
-            </p>
+        <section className="apple-hero">
+          <div className="badge badge-gray" style={{ marginBottom: 16 }}>
+            Curated Multi-Vendor Marketplace
+          </div>
+          <h1 className="apple-hero-title">
+            Engineered for craft.<br />Delivered direct from creators.
+          </h1>
+          <p className="apple-hero-sub">
+            Discover verified merchant storefronts, sub-millisecond Redis cart caching, and automated split payments with zero platform markup.
+          </p>
 
-            <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#34d399', fontSize: '0.88rem' }}>
-                <CheckCircle size={16} /> Verified Multi-Vendor Stores
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#38bdf8', fontSize: '0.88rem' }}>
-                <Clock size={16} /> Instant Redis Cart Cache
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#fbbf24', fontSize: '0.88rem' }}>
-                <CreditCard size={16} /> Automated Split Payments
-              </div>
+          <div className="hero-pills">
+            <div className="hero-pill-item">
+              <CheckCircle size={14} color="var(--apple-green)" /> Verified Independent Merchants
+            </div>
+            <div className="hero-pill-item">
+              <Clock size={14} color="#2997ff" /> Real-Time Redis Cart Store
+            </div>
+            <div className="hero-pill-item">
+              <CreditCard size={14} color="var(--apple-amber)" /> Instant Multi-Vendor Split Transfers
             </div>
           </div>
         </section>
 
-        {/* Category Pills */}
-        <div style={{ display: 'flex', gap: 10, marginBottom: 28, overflowX: 'auto', paddingBottom: 4 }}>
+        {/* Apple Segmented Category Control */}
+        <div className="category-bar">
           <button
-            className={`btn ${selectedCategory === '' ? 'btn-primary' : 'btn-secondary'}`}
-            style={{ borderRadius: 999, padding: '8px 18px' }}
+            className={`category-pill ${selectedCategory === '' ? 'active' : ''}`}
             onClick={() => {
               setSelectedCategory('');
               fetchProducts(searchQuery, '');
@@ -336,8 +333,7 @@ export default function Storefront() {
           {['Electronics', 'Fashion', 'Footwear'].map((cat) => (
             <button
               key={cat}
-              className={`btn ${selectedCategory === cat ? 'btn-primary' : 'btn-secondary'}`}
-              style={{ borderRadius: 999, padding: '8px 18px' }}
+              className={`category-pill ${selectedCategory === cat ? 'active' : ''}`}
               onClick={() => {
                 setSelectedCategory(cat);
                 fetchProducts(searchQuery, cat);
@@ -348,7 +344,7 @@ export default function Storefront() {
           ))}
         </div>
 
-        {/* Catalog Grid */}
+        {/* Product Gallery Grid */}
         <div className="product-grid">
           {products.map((product) => {
             const displayPrice = product.discountPrice > 0 ? product.discountPrice : product.price;
@@ -357,81 +353,53 @@ export default function Storefront() {
                 key={product._id}
                 className="product-card"
                 onClick={() => setSelectedProduct(product)}
-                style={{ cursor: 'pointer' }}
               >
                 <div className="product-img-wrap">
                   <img src={product.images[0]} alt={product.title} className="product-img" />
-                  {product.discountPrice > 0 && (
-                    <div
-                      style={{
-                        position: 'absolute',
-                        top: 12,
-                        left: 12,
-                        background: 'var(--accent-rose)',
-                        color: '#fff',
-                        fontSize: '0.72rem',
-                        fontWeight: 700,
-                        padding: '3px 8px',
-                        borderRadius: 6
-                      }}
-                    >
-                      SAVE ₹{product.price - product.discountPrice}
-                    </div>
-                  )}
                   <div
                     style={{
                       position: 'absolute',
-                      top: 12,
-                      right: 12,
-                      background: 'rgba(17, 23, 38, 0.85)',
-                      backdropFilter: 'blur(8px)',
-                      padding: '4px 10px',
-                      borderRadius: 20,
-                      fontSize: '0.75rem',
+                      top: 14,
+                      right: 14,
+                      background: 'rgba(0, 0, 0, 0.65)',
+                      backdropFilter: 'blur(10px)',
+                      padding: '4px 8px',
+                      borderRadius: 980,
+                      fontSize: '0.72rem',
                       display: 'flex',
                       alignItems: 'center',
-                      gap: 4
+                      gap: 4,
+                      color: '#ffffff'
                     }}
                   >
-                    <Star size={12} fill="#fbbf24" color="#fbbf24" />
+                    <Star size={11} fill="#ffd60a" color="#ffd60a" />
                     <span>{product.ratingAverage}</span>
                   </div>
                 </div>
 
                 <div className="product-body">
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-                    <Store size={14} color="var(--primary-light)" />
-                    <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600 }}>
-                      {product.vendor?.storeName || 'Verified Store'}
-                    </span>
+                  <div className="product-vendor">
+                    <Store size={13} />
+                    <span>{product.vendor?.storeName || 'Verified Store'}</span>
                   </div>
 
-                  <h3 style={{ fontSize: '1.05rem', fontWeight: 600, marginBottom: 8, lineHeight: 1.4, height: 42, overflow: 'hidden' }}>
-                    {product.title}
-                  </h3>
+                  <h3 className="product-title">{product.title}</h3>
 
-                  <p style={{ fontSize: '0.82rem', color: 'var(--text-dim)', marginBottom: 16, height: 38, overflow: 'hidden' }}>
-                    {product.description}
-                  </p>
+                  <p className="product-desc">{product.description}</p>
 
-                  <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div className="product-footer">
                     <div>
-                      <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#ffffff' }}>
-                        ₹{displayPrice.toLocaleString()}
-                      </div>
+                      <span className="price-main">₹{displayPrice.toLocaleString()}</span>
                       {product.discountPrice > 0 && (
-                        <div style={{ fontSize: '0.8rem', color: 'var(--text-dim)', textDecoration: 'line-through' }}>
-                          ₹{product.price.toLocaleString()}
-                        </div>
+                        <span className="price-strike">₹{product.price.toLocaleString()}</span>
                       )}
                     </div>
 
                     <button
                       className="btn btn-primary"
-                      style={{ padding: '8px 14px' }}
                       onClick={(e) => handleAddToCart(product, e)}
                     >
-                      <ShoppingBag size={15} /> Add
+                      Add to Cart
                     </button>
                   </div>
                 </div>
@@ -441,29 +409,30 @@ export default function Storefront() {
         </div>
       </main>
 
-      {/* Redis Cart Drawer */}
+      {/* =========================================================================
+          APPLE SHEET CART DRAWER
+          ========================================================================= */}
       {isCartOpen && (
         <div className="drawer-backdrop" onClick={() => setIsCartOpen(false)}>
           <div className="drawer-panel" onClick={(e) => e.stopPropagation()}>
-            <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <ShoppingBag size={20} color="var(--primary-light)" />
-                <h3 className="heading-display" style={{ fontSize: '1.25rem' }}>Your Cart</h3>
-                <span className="badge badge-indigo">Redis Cache</span>
+            <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--apple-hairline)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <h3 style={{ fontSize: '1.15rem', fontWeight: 600 }}>Your Bag</h3>
+                <span style={{ fontSize: '0.75rem', color: 'var(--apple-secondary)' }}>Redis Fast In-Memory Cache</span>
               </div>
               <button
-                style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+                style={{ background: 'transparent', border: 'none', color: 'var(--apple-secondary)', cursor: 'pointer' }}
                 onClick={() => setIsCartOpen(false)}
               >
-                <X size={20} />
+                <X size={18} />
               </button>
             </div>
 
             <div style={{ flex: 1, overflowY: 'auto', padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
               {cart.items.length === 0 ? (
-                <div style={{ textAlign: 'center', margin: 'auto', color: 'var(--text-muted)' }}>
-                  <ShoppingBag size={48} style={{ margin: '0 auto 16px', opacity: 0.3 }} />
-                  <p>Your shopping cart is empty.</p>
+                <div style={{ textAlign: 'center', margin: 'auto', color: 'var(--apple-secondary)' }}>
+                  <ShoppingBag size={42} style={{ margin: '0 auto 14px', opacity: 0.3 }} />
+                  <p style={{ fontSize: '0.9rem' }}>Your bag is empty.</p>
                 </div>
               ) : (
                 cart.items.map((item) => (
@@ -475,34 +444,34 @@ export default function Storefront() {
                       padding: 14,
                       background: 'rgba(255, 255, 255, 0.03)',
                       borderRadius: 12,
-                      border: '1px solid var(--border-subtle)'
+                      border: '1px solid var(--apple-hairline)'
                     }}
                   >
-                    <img src={item.image} alt={item.title} style={{ width: 64, height: 64, borderRadius: 8, objectFit: 'cover' }} />
+                    <img src={item.image} alt={item.title} style={{ width: 60, height: 60, borderRadius: 8, objectFit: 'cover' }} />
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontWeight: 600, fontSize: '0.92rem', marginBottom: 4 }}>{item.title}</div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--primary-light)', marginBottom: 8 }}>
-                        Vendor: {item.vendor.storeName}
+                      <div style={{ fontWeight: 600, fontSize: '0.9rem', marginBottom: 2 }}>{item.title}</div>
+                      <div style={{ fontSize: '0.74rem', color: 'var(--apple-secondary)', marginBottom: 8 }}>
+                        By {item.vendor.storeName}
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                           <button
                             className="btn btn-secondary"
-                            style={{ padding: '2px 8px', fontSize: '0.8rem', height: 26 }}
+                            style={{ padding: '2px 8px', fontSize: '0.75rem', height: 24, borderRadius: 6 }}
                             onClick={() => handleUpdateQuantity(item.productId, item.quantity - 1)}
                           >
                             -
                           </button>
-                          <span style={{ fontWeight: 700, fontSize: '0.9rem' }}>{item.quantity}</span>
+                          <span style={{ fontWeight: 600, fontSize: '0.85rem' }}>{item.quantity}</span>
                           <button
                             className="btn btn-secondary"
-                            style={{ padding: '2px 8px', fontSize: '0.8rem', height: 26 }}
+                            style={{ padding: '2px 8px', fontSize: '0.75rem', height: 24, borderRadius: 6 }}
                             onClick={() => handleUpdateQuantity(item.productId, item.quantity + 1)}
                           >
                             +
                           </button>
                         </div>
-                        <span style={{ fontWeight: 800, fontSize: '1rem' }}>₹{item.lineTotal.toLocaleString()}</span>
+                        <span style={{ fontWeight: 600, fontSize: '0.95rem' }}>₹{item.lineTotal.toLocaleString()}</span>
                       </div>
                     </div>
                   </div>
@@ -511,25 +480,25 @@ export default function Storefront() {
             </div>
 
             {cart.items.length > 0 && (
-              <div style={{ padding: 24, borderTop: '1px solid var(--border-subtle)', background: 'rgba(0, 0, 0, 0.2)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+              <div style={{ padding: 24, borderTop: '1px solid var(--apple-hairline)', background: 'rgba(0, 0, 0, 0.3)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: '0.85rem', color: 'var(--apple-secondary)' }}>
                   <span>Subtotal</span>
                   <span>₹{cart.subtotal.toLocaleString()}</span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16, fontSize: '1.2rem', fontWeight: 800 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 20, fontSize: '1.25rem', fontWeight: 700 }}>
                   <span>Total</span>
                   <span>₹{cart.subtotal.toLocaleString()}</span>
                 </div>
 
                 <button
                   className="btn btn-primary"
-                  style={{ width: '100%', padding: '14px', fontSize: '1rem' }}
+                  style={{ width: '100%', padding: '12px', fontSize: '0.95rem' }}
                   onClick={() => {
                     setIsCartOpen(false);
                     setIsCheckoutOpen(true);
                   }}
                 >
-                  Proceed to Split Checkout <ChevronRight size={18} />
+                  Checkout with Split Transfer <ChevronRight size={16} />
                 </button>
               </div>
             )}
@@ -537,83 +506,95 @@ export default function Storefront() {
         </div>
       )}
 
-      {/* Split Payment Modal */}
+      {/* =========================================================================
+          APPLE PAY / WALLET SPLIT CHECKOUT MODAL
+          ========================================================================= */}
       {isCheckoutOpen && (
         <div className="modal-overlay" onClick={() => setIsCheckoutOpen(false)}>
-          <div className="modal-dialog" onClick={(e) => e.stopPropagation()} style={{ padding: 32 }}>
+          <div className="modal-dialog" onClick={(e) => e.stopPropagation()} style={{ padding: 36 }}>
             {!completedOrder ? (
               <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
                   <div>
-                    <div className="badge badge-emerald" style={{ marginBottom: 6 }}>
-                      <CreditCard size={14} /> Split Payment Engine
-                    </div>
-                    <h2 className="heading-display" style={{ fontSize: '1.5rem' }}>Checkout & Vendor Split</h2>
+                    <h2 style={{ fontSize: '1.45rem', fontWeight: 600, letterSpacing: '-0.02em' }}>
+                      Complete Order
+                    </h2>
+                    <p style={{ color: 'var(--apple-secondary)', fontSize: '0.82rem' }}>
+                      Automated multi-vendor split settlement
+                    </p>
                   </div>
                   <button
-                    style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+                    style={{ background: 'transparent', border: 'none', color: 'var(--apple-secondary)', cursor: 'pointer' }}
                     onClick={() => setIsCheckoutOpen(false)}
                   >
-                    <X size={20} />
+                    <X size={18} />
                   </button>
                 </div>
 
-                <div style={{ background: 'rgba(255, 255, 255, 0.03)', borderRadius: 12, padding: 16, marginBottom: 20, border: '1px solid var(--border-subtle)' }}>
-                  <div style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 10 }}>
-                    Automated Split Breakdown:
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: '0.85rem' }}>
+                {/* Ledger Breakdown Card */}
+                <div style={{ background: 'rgba(255, 255, 255, 0.03)', borderRadius: 12, padding: 18, marginBottom: 24, border: '1px solid var(--apple-hairline)' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10, fontSize: '0.86rem' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span>Order Subtotal</span>
-                      <strong>₹{cart.subtotal.toLocaleString()}</strong>
+                      <span style={{ color: 'var(--apple-secondary)' }}>Cart Subtotal</span>
+                      <strong style={{ color: 'var(--apple-text)' }}>₹{cart.subtotal.toLocaleString()}</strong>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', color: '#34d399' }}>
-                      <span>Platform Commission Cut (10%)</span>
-                      <strong>₹{(cart.subtotal * 0.1).toFixed(2)}</strong>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ color: 'var(--apple-secondary)' }}>Platform Service Fee (10%)</span>
+                      <strong style={{ color: 'var(--apple-green)' }}>₹{(cart.subtotal * 0.1).toFixed(2)}</strong>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--accent-cyan)' }}>
-                      <span>Vendor Payout Share (90%)</span>
-                      <strong>₹{(cart.subtotal * 0.9).toFixed(2)}</strong>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 8, borderTop: '1px solid var(--apple-hairline)' }}>
+                      <span style={{ color: 'var(--apple-secondary)' }}>Net Vendor Remittance (90%)</span>
+                      <strong style={{ color: '#2997ff' }}>₹{(cart.subtotal * 0.9).toFixed(2)}</strong>
                     </div>
                   </div>
                 </div>
 
+                {/* Apple Pay Test Card Strip */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: 'rgba(255, 255, 255, 0.04)', borderRadius: 10, border: '1px solid var(--apple-hairline)', marginBottom: 24 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: '0.88rem' }}>
+                    <CreditCard size={18} color="var(--apple-secondary)" />
+                    <span>Apple Pay Sandbox Card</span>
+                  </div>
+                  <span style={{ color: 'var(--apple-green)', fontSize: '0.78rem', fontWeight: 600 }}>•••• 4242</span>
+                </div>
+
                 <button
-                  className="btn btn-emerald"
-                  style={{ width: '100%', padding: '14px', fontSize: '1rem' }}
+                  className="btn btn-primary"
+                  style={{ width: '100%', padding: '12px', fontSize: '0.95rem' }}
                   disabled={isProcessingPayment}
                   onClick={handleCheckout}
                 >
-                  {isProcessingPayment ? 'Processing Split Payment...' : `Authorize ₹${cart.subtotal.toLocaleString()} & Transfer Funds`}
+                  {isProcessingPayment ? 'Processing Split Authorization...' : `Pay ₹${cart.subtotal.toLocaleString()}`}
                 </button>
               </div>
             ) : (
               <div style={{ textAlign: 'center' }}>
-                <CheckCircle size={44} color="#34d399" style={{ margin: '0 auto 16px' }} />
-                <h2 className="heading-display" style={{ fontSize: '1.6rem', marginBottom: 8 }}>Order Confirmed!</h2>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginBottom: 20 }}>
-                  Order <strong>{completedOrder.orderNumber}</strong> was placed. Platform commission was collected and vendor balances credited.
+                <CheckCircle size={44} color="var(--apple-green)" style={{ margin: '0 auto 16px' }} />
+                <h2 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: 8 }}>Order Complete</h2>
+                <p style={{ color: 'var(--apple-secondary)', fontSize: '0.88rem', marginBottom: 24 }}>
+                  Order <strong>{completedOrder.orderNumber}</strong> processed. Platform fee was retained and funds credited to merchant accounts.
                 </p>
+
                 <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
                   <a
                     href={`/api/orders/${completedOrder._id}/invoice`}
                     target="_blank"
                     rel="noreferrer"
-                    className="btn btn-primary"
-                    style={{ padding: '12px 20px' }}
+                    className="btn btn-secondary"
+                    style={{ padding: '10px 18px' }}
                   >
-                    <FileText size={18} /> Download Tax PDF Invoice
+                    <FileText size={15} /> Download Tax PDF
                   </a>
                   <button
-                    className="btn btn-secondary"
-                    style={{ padding: '12px 20px' }}
+                    className="btn btn-primary"
+                    style={{ padding: '10px 18px' }}
                     onClick={() => {
                       setIsCheckoutOpen(false);
                       setCompletedOrder(null);
                       navigate('/my-orders');
                     }}
                   >
-                    View My Orders
+                    View Orders
                   </button>
                 </div>
               </div>
@@ -622,64 +603,69 @@ export default function Storefront() {
         </div>
       )}
 
-      {/* Product Details Modal */}
+      {/* =========================================================================
+          APPLE PRODUCT DETAIL SHEET
+          ========================================================================= */}
       {selectedProduct && (
         <div className="modal-overlay" onClick={() => setSelectedProduct(null)}>
-          <div className="modal-dialog" onClick={(e) => e.stopPropagation()} style={{ padding: 32 }}>
+          <div className="modal-dialog" onClick={(e) => e.stopPropagation()} style={{ padding: 36 }}>
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
               <button
-                style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+                style={{ background: 'transparent', border: 'none', color: 'var(--apple-secondary)', cursor: 'pointer' }}
                 onClick={() => setSelectedProduct(null)}
               >
-                <X size={20} />
+                <X size={18} />
               </button>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginBottom: 24 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28, marginBottom: 24 }}>
               <img
                 src={selectedProduct.images[0]}
                 alt={selectedProduct.title}
                 style={{ width: '100%', height: 260, objectFit: 'cover', borderRadius: 12 }}
               />
               <div>
-                <div className="badge badge-indigo" style={{ marginBottom: 8 }}>{selectedProduct.category}</div>
-                <h2 style={{ fontSize: '1.35rem', fontWeight: 700, marginBottom: 8 }}>{selectedProduct.title}</h2>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 14 }}>
-                  <Store size={15} color="var(--primary-light)" />
-                  <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                    Store: <strong>{selectedProduct.vendor?.storeName || 'Verified Store'}</strong>
-                  </span>
+                <span className="badge badge-gray" style={{ marginBottom: 10 }}>
+                  {selectedProduct.category}
+                </span>
+                <h2 style={{ fontSize: '1.35rem', fontWeight: 600, letterSpacing: '-0.02em', marginBottom: 8 }}>
+                  {selectedProduct.title}
+                </h2>
+                <div style={{ fontSize: '0.82rem', color: 'var(--apple-secondary)', marginBottom: 14 }}>
+                  Sold & fulfilled by <strong>{selectedProduct.vendor?.storeName || 'Verified Merchant'}</strong>
                 </div>
-                <div style={{ fontSize: '1.6rem', fontWeight: 800, marginBottom: 16 }}>
+                <div style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: 16 }}>
                   ₹{(selectedProduct.discountPrice > 0 ? selectedProduct.discountPrice : selectedProduct.price).toLocaleString()}
                 </div>
                 <button
                   className="btn btn-primary"
-                  style={{ width: '100%', padding: '12px' }}
+                  style={{ width: '100%', padding: '10px' }}
                   onClick={() => {
                     handleAddToCart(selectedProduct);
                     setSelectedProduct(null);
                   }}
                 >
-                  <ShoppingBag size={18} /> Add to Cart
+                  Add to Bag
                 </button>
               </div>
             </div>
 
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.92rem' }}>{selectedProduct.description}</p>
+            <p style={{ color: 'var(--apple-secondary)', fontSize: '0.88rem', lineHeight: 1.55 }}>
+              {selectedProduct.description}
+            </p>
           </div>
         </div>
       )}
 
       {/* Footer */}
-      <footer style={{ borderTop: '1px solid var(--border-subtle)', padding: '24px', textAlign: 'center', marginTop: 'auto' }}>
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 24, marginBottom: 12, fontSize: '0.85rem' }}>
-          <a href="/vendor" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Seller Portal</a>
-          <a href="/admin" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Admin Console</a>
-          <a href="/my-orders" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Order Tracking</a>
+      <footer style={{ borderTop: '1px solid var(--apple-hairline)', padding: '24px', textAlign: 'center', marginTop: 'auto' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 24, marginBottom: 10, fontSize: '0.82rem' }}>
+          <a href="/vendor" style={{ color: 'var(--apple-secondary)', textDecoration: 'none' }}>Merchant Central</a>
+          <a href="/admin" style={{ color: 'var(--apple-secondary)', textDecoration: 'none' }}>Platform Console</a>
+          <a href="/my-orders" style={{ color: 'var(--apple-secondary)', textDecoration: 'none' }}>My Bag & Orders</a>
         </div>
-        <p style={{ color: 'var(--text-dim)', fontSize: '0.82rem' }}>
-          MarketPulse Multi-Vendor Marketplace • Node.js, Express, MongoDB, Redis, Elasticsearch & Stripe Connect.
+        <p style={{ color: 'var(--apple-tertiary)', fontSize: '0.78rem' }}>
+          MarketPulse Platform • Powered by Express, MongoDB, Redis, and Stripe Connect.
         </p>
       </footer>
     </div>
