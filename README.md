@@ -1,5 +1,11 @@
 # MarketPulse — Multi-Vendor E-Commerce Marketplace
 
+[![CI Pipeline](https://github.com/Amar209/Multi_vendor_e-commerce_marketplace/actions/workflows/ci.yml/badge.svg)](https://github.com/Amar209/Multi_vendor_e-commerce_marketplace/actions)
+[![OpenAPI 3.0](https://img.shields.io/badge/OpenAPI-3.0_Swagger-blue.svg)](http://localhost:5000/api/docs)
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker&logoColor=white)](docker-compose.yml)
+[![Node.js](https://img.shields.io/badge/Node.js-18+-339933?logo=node.js&logoColor=white)](package.json)
+[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)](client/package.json)
+
 > **Capstone Project Code:** FS-01 | **Track:** Full-Stack Development  
 > An Amazon-style marketplace where many vendors sell, customers buy, and the platform splits payments and earns commission.
 
@@ -110,6 +116,21 @@ npm run dev
 ### Platform Analytics (`/api/analytics`)
 - `GET /api/analytics/admin` — Gross Merchandise Value (GMV), total commissions, vendor totals
 - `GET /api/analytics/vendor` — Store gross sales, net balance, items sold
+
+### Interactive OpenAPI / Swagger Documentation
+- **Live Swagger UI**: `/api/docs` (Interactive API explorer to test all endpoints)
+- **OpenAPI 3.0 Spec**: `/api/docs/spec.json`
+
+---
+
+## 🌐 Live External Deployment
+
+| Service | Platform | Source Directory | Live Link |
+| :--- | :--- | :--- | :--- |
+| **Backend API** | [Render](https://render.com) | `/server` | `https://marketpulse-api.onrender.com` |
+| **Frontend UI** | [Vercel](https://vercel.com) | `/client` | `https://marketpulse.vercel.app` |
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for step-by-step production setup and environment variables.
 
 ---
 
