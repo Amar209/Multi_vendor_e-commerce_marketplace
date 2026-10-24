@@ -5,7 +5,8 @@ import { Coupon } from '../models/Coupon.js';
 // @access  Public
 export const validateCoupon = async (req, res) => {
   try {
-    const { code, subtotal = 0 } = req.body;
+    const { code, subtotal = 0, cartSubtotal = 0 } = req.body;
+    const effectiveSubtotal = subtotal || cartSubtotal;
     if (!code) {
       return res.status(400).json({ success: false, message: 'Please enter a coupon code.' });
     }
@@ -21,7 +22,7 @@ export const validateCoupon = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Invalid or expired coupon code.' });
     }
 
-    if (subtotal < coupon.minOrderAmount) {
+    if (effectiveSubtotal < coupon.minOrderAmount) {
       return res.status(400).json({
         success: false,
         message: `This coupon requires a minimum cart value of ₹${coupon.minOrderAmount.toLocaleString()}.`
@@ -30,16 +31,18 @@ export const validateCoupon = async (req, res) => {
 
     let discountAmount = 0;
     if (coupon.discountType === 'percentage') {
-      discountAmount = Number(((subtotal * coupon.discountValue) / 100).toFixed(2));
+      discountAmount = Number(((effectiveSubtotal * coupon.discountValue) / 100).toFixed(2));
       if (coupon.maxDiscountAmount && discountAmount > coupon.maxDiscountAmount) {
         discountAmount = coupon.maxDiscountAmount;
       }
     } else {
-      discountAmount = Math.min(coupon.discountValue, subtotal);
+      discountAmount = Math.min(coupon.discountValue, effectiveSubtotal);
     }
 
     res.status(200).json({
       success: true,
+      discount: discountAmount,
+      code: coupon.code,
       data: {
         code: coupon.code,
         discountType: coupon.discountType,

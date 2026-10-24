@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:7.0
+    container_name: marketpulse_mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: multi_vendor_marketplace
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - marketplace_network
+
+  # Redis Cache & Cart Storage
+  redis:
+    image: redis:7.2-alpine
+    container_name: marketpulse_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - marketplace_network
+
+  # Backend REST API Service
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: marketpulse_backend
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+      MONGO_URI: mongodb://mongodb:27017/multi_vendor_marketplace
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: production_super_secure_jwt_secret_key_2026_marketpulse
+      JWT_EXPIRES_IN: 7d
+    depends_on:
+      - mongodb
+      - redis
+    networks:
+      - marketplace_network
+
+  # Frontend Nginx & React Client
+  frontend:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: marketpulse_frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - marketplace_network
+
+volumes:
+  mongo_data:
+  redis_data:
+
+networks:
+  marketplace_network:
+    driver: bridge

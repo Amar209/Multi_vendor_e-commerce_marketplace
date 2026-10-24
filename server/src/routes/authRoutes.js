@@ -1,14 +1,15 @@
 import express from 'express';
 import { register, login, getMe } from '../controllers/authController.js';
 import { protect } from '../middleware/auth.js';
+import { authLimiter } from '../middleware/rateLimiter.js';
 
 const router = express.Router();
 
-router.post('/register', register);
-router.post('/login', login);
+router.post('/register', authLimiter, register);
+router.post('/login', authLimiter, login);
 router.get('/me', protect, getMe);
 
-// Reset database to fresh clean slate (0 products, 0 orders, 0 balances)
+// Reset database to fresh clean slate (in dev or when invoked)
 router.post('/reset-clean', async (req, res) => {
   const { resetCleanSlate } = await import('../utils/autoSeed.js');
   await resetCleanSlate();

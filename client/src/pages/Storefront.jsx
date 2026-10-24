@@ -619,8 +619,8 @@ export default function Storefront() {
                     position: 'absolute',
                     top: -4,
                     right: -4,
-                    background: '#ffffff',
-                    color: '#000000',
+                    background: 'var(--theme-accent)',
+                    color: '#ffffff',
                     borderRadius: 980,
                     width: 18,
                     height: 18,
@@ -628,7 +628,8 @@ export default function Storefront() {
                     alignItems: 'center',
                     justifyContent: 'center',
                     fontSize: '0.7rem',
-                    fontWeight: 700
+                    fontWeight: 700,
+                    boxShadow: '0 2px 8px rgba(12, 150, 156, 0.5)'
                   }}
                 >
                   {cart.itemCount}
@@ -644,31 +645,47 @@ export default function Storefront() {
           ========================================================================= */}
       <main className="main-wrapper" style={{ flex: 1 }}>
         <section className="apple-hero">
-          <div className="badge badge-gray" style={{ marginBottom: 16 }}>
+          <div className="badge badge-blue" style={{ marginBottom: 16 }}>
             Curated Multi-Vendor Marketplace
           </div>
           <h1 className="apple-hero-title">
-            Engineered for craft.<br />Delivered direct from creators.
+            Curated Creations.<br />Delivered Direct from Creators.
           </h1>
           <p className="apple-hero-sub">
-            Discover verified independent merchant storefronts, fast checkout, and seamless order delivery direct from creators.
+            Discover verified merchant storefronts, instant multi-vendor split checkout, and direct artisanal delivery.
           </p>
+
+          <div style={{ marginBottom: 32, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+            <button
+              className="btn btn-primary"
+              style={{ padding: '13px 34px', fontSize: '1rem', fontWeight: 700 }}
+              onClick={() => {
+                const el = document.getElementById('catalog-section');
+                if (el) el.scrollIntoView({ behavior: 'smooth' });
+              }}
+            >
+              Explore Collection <ArrowRight size={17} />
+            </button>
+            <span style={{ fontSize: '0.8rem', color: '#64748b' }}>
+              Direct creator payouts • Instant split transfers • Buyer protection
+            </span>
+          </div>
 
           <div className="hero-pills">
             <div className="hero-pill-item">
-              <CheckCircle size={14} color="var(--apple-green)" /> Verified Independent Merchants
+              <CheckCircle size={15} color="var(--theme-accent)" /> Verified Independent Merchants
             </div>
             <div className="hero-pill-item">
-              <Clock size={14} color="#2997ff" /> Seamless Cart Checkout
+              <Clock size={15} color="var(--theme-accent)" /> Seamless Cart Checkout
             </div>
             <div className="hero-pill-item">
-              <CreditCard size={14} color="var(--apple-amber)" /> Instant Multi-Vendor Split Transfers
+              <CreditCard size={15} color="#f59e0b" /> Instant Multi-Vendor Split Transfers
             </div>
           </div>
         </section>
 
-        {/* Apple Segmented Category & Sorting Toolbar */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16, marginBottom: 28 }}>
+        {/* Category & Sorting Toolbar */}
+        <div id="catalog-section" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16, marginBottom: 28 }}>
           <div className="category-bar" style={{ margin: 0 }}>
             <button
               className={`category-pill ${selectedCategory === '' ? 'active' : ''}`}
@@ -694,8 +711,8 @@ export default function Storefront() {
           </div>
 
           {/* Sort By Filter Dropdown */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(255, 255, 255, 0.04)', padding: '6px 14px', borderRadius: 980, border: '1px solid var(--apple-hairline)' }}>
-            <SlidersHorizontal size={13} color="var(--apple-secondary)" />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--theme-surface)', padding: '7px 16px', borderRadius: 9999, border: '1px solid var(--theme-border)' }}>
+            <SlidersHorizontal size={13} color="var(--theme-slate)" />
             <span style={{ fontSize: '0.78rem', color: 'var(--apple-secondary)', fontWeight: 500 }}>Sort:</span>
             <select
               value={sortBy}
@@ -708,15 +725,15 @@ export default function Storefront() {
                 border: 'none',
                 color: 'var(--apple-text)',
                 fontSize: '0.78rem',
-                fontWeight: 500,
+                fontWeight: 600,
                 outline: 'none',
                 cursor: 'pointer'
               }}
             >
-              <option value="" style={{ background: '#1d1d1f' }}>Featured (Newest)</option>
-              <option value="price-asc" style={{ background: '#1d1d1f' }}>Price: Low to High</option>
-              <option value="price-desc" style={{ background: '#1d1d1f' }}>Price: High to Low</option>
-              <option value="rating" style={{ background: '#1d1d1f' }}>Top Customer Rating</option>
+              <option value="">Featured (Newest)</option>
+              <option value="price-asc">Price: Low to High</option>
+              <option value="price-desc">Price: High to Low</option>
+              <option value="rating">Top Customer Rating</option>
             </select>
           </div>
         </div>
@@ -964,7 +981,7 @@ export default function Storefront() {
             </div>
 
             {cart.items.length > 0 && (
-              <div style={{ padding: 24, borderTop: '1px solid var(--apple-hairline)', background: 'rgba(0, 0, 0, 0.3)' }}>
+              <div style={{ padding: 24, borderTop: '1px solid var(--apple-hairline)', background: '#f8fafc' }}>
                 {/* Promo Code Input in Cart */}
                 <div style={{ marginBottom: 16 }}>
                   {!appliedCoupon ? (

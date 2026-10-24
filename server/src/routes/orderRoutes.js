@@ -7,12 +7,13 @@ import {
   downloadInvoice
 } from '../controllers/orderController.js';
 import { protect, authorize } from '../middleware/auth.js';
+import { checkoutLimiter } from '../middleware/rateLimiter.js';
 
 const router = express.Router();
 
 router.use(protect);
 
-router.post('/', createOrder);
+router.post('/', checkoutLimiter, createOrder);
 router.get('/my-orders', getMyOrders);
 router.get('/vendor/incoming', authorize('vendor'), getVendorOrders);
 router.put('/:orderId/items/:itemId/status', authorize('vendor', 'admin'), updateFulfillmentStatus);

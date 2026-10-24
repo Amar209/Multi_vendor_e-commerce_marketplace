@@ -94,28 +94,28 @@ export default function LoginPage() {
         <div style={{ textAlign: 'center', marginBottom: 20 }}>
           <div
             style={{
-              width: 44,
-              height: 44,
-              borderRadius: 10,
-              background: '#1c1c1f',
-              border: '1px solid var(--apple-hairline)',
+              width: 48,
+              height: 48,
+              borderRadius: 12,
+              background: 'linear-gradient(135deg, #116dff 0%, #0050d8 100%)',
+              boxShadow: '0 4px 14px rgba(17, 109, 255, 0.35)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              margin: '0 auto 14px',
-              color: 'var(--apple-text)'
+              margin: '0 auto 16px',
+              color: '#ffffff'
             }}
           >
-            <Layers size={22} />
+            <Layers size={24} />
           </div>
-          <h1 style={{ fontSize: '1.45rem', fontWeight: 600, letterSpacing: '-0.025em', marginBottom: 6 }}>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 700, letterSpacing: '-0.025em', marginBottom: 6, color: '#0f172a' }}>
             {isRegister
               ? roleTab === 'vendor'
                 ? 'Merchant Store Onboarding'
                 : 'Create Customer Account'
               : 'Sign in to MarketPulse'}
           </h1>
-          <p style={{ color: 'var(--apple-secondary)', fontSize: '0.84rem' }}>
+          <p style={{ color: '#64748b', fontSize: '0.86rem' }}>
             {isRegister
               ? 'Join the multi-vendor marketplace platform'
               : 'Enter your credentials to access your portal'}
@@ -123,16 +123,18 @@ export default function LoginPage() {
         </div>
 
         {/* Role Segmented Switcher */}
-        <div style={{ display: 'grid', gridTemplateColumns: isRegister ? '1fr 1fr' : '1fr 1fr 1fr', gap: 4, background: 'rgba(255, 255, 255, 0.04)', padding: 3, borderRadius: 10, marginBottom: 22, border: '1px solid var(--apple-hairline)' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isRegister ? '1fr 1fr' : '1fr 1fr 1fr', gap: 4, background: '#f1f5f9', padding: 4, borderRadius: 10, marginBottom: 22, border: '1px solid #e2e8f0' }}>
           <button
             type="button"
             className="btn"
             style={{
-              padding: '6px 8px',
-              fontSize: '0.78rem',
+              padding: '7px 8px',
+              fontSize: '0.8rem',
               borderRadius: 8,
-              background: roleTab === 'customer' ? 'rgba(255, 255, 255, 0.12)' : 'transparent',
-              color: roleTab === 'customer' ? 'var(--apple-text)' : 'var(--apple-secondary)'
+              background: roleTab === 'customer' ? '#ffffff' : 'transparent',
+              color: roleTab === 'customer' ? '#0f172a' : '#64748b',
+              fontWeight: roleTab === 'customer' ? 600 : 500,
+              boxShadow: roleTab === 'customer' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none'
             }}
             onClick={() => handleTabChange('customer')}
           >
@@ -142,26 +144,30 @@ export default function LoginPage() {
             type="button"
             className="btn"
             style={{
-              padding: '6px 8px',
-              fontSize: '0.78rem',
+              padding: '7px 8px',
+              fontSize: '0.8rem',
               borderRadius: 8,
-              background: roleTab === 'vendor' ? 'rgba(255, 255, 255, 0.12)' : 'transparent',
-              color: roleTab === 'vendor' ? 'var(--apple-text)' : 'var(--apple-secondary)'
+              background: roleTab === 'vendor' ? '#ffffff' : 'transparent',
+              color: roleTab === 'vendor' ? '#0f172a' : '#64748b',
+              fontWeight: roleTab === 'vendor' ? 600 : 500,
+              boxShadow: roleTab === 'vendor' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none'
             }}
             onClick={() => handleTabChange('vendor')}
           >
-            {isRegister ? '🏪 Merchant (Store Onboarding)' : 'Merchant'}
+            {isRegister ? '🏪 Merchant' : 'Merchant'}
           </button>
           {!isRegister && (
             <button
               type="button"
               className="btn"
               style={{
-                padding: '6px 8px',
-                fontSize: '0.78rem',
+                padding: '7px 8px',
+                fontSize: '0.8rem',
                 borderRadius: 8,
-                background: roleTab === 'admin' ? 'rgba(255, 255, 255, 0.12)' : 'transparent',
-                color: roleTab === 'admin' ? 'var(--apple-text)' : 'var(--apple-secondary)'
+                background: roleTab === 'admin' ? '#ffffff' : 'transparent',
+                color: roleTab === 'admin' ? '#0f172a' : '#64748b',
+                fontWeight: roleTab === 'admin' ? 600 : 500,
+                boxShadow: roleTab === 'admin' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none'
               }}
               onClick={() => handleTabChange('admin')}
             >

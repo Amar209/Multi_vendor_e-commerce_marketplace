@@ -93,10 +93,6 @@ export default function VendorPortal() {
       return;
     }
     loadData();
-    const interval = setInterval(() => {
-      loadData();
-    }, 4000);
-    return () => clearInterval(interval);
   }, [token]);
 
   const handleImageFileChange = (e) => {
@@ -340,57 +336,13 @@ export default function VendorPortal() {
             </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            {/* Live Telemetry Active Pulse */}
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 7,
-                padding: '4px 10px',
-                background: 'rgba(48, 209, 88, 0.08)',
-                border: '1px solid rgba(48, 209, 88, 0.25)',
-                borderRadius: 20,
-                fontSize: '0.74rem',
-                color: 'var(--apple-green)',
-                fontWeight: 500
-              }}
-            >
-              <span
-                style={{
-                  width: 7,
-                  height: 7,
-                  borderRadius: '50%',
-                  background: 'var(--apple-green)',
-                  animation: 'livePulse 2s infinite'
-                }}
-              />
-              <span>Live Sync Active</span>
-            </div>
-
-            <button
-              className="btn btn-secondary"
-              style={{ padding: '6px 12px', fontSize: '0.78rem' }}
-              onClick={() => loadData()}
-              title="Manual refresh"
-            >
-              <RotateCcw size={12} /> Sync
-            </button>
-
-            <button
-              className="btn btn-secondary"
-              style={{ padding: '6px 12px', fontSize: '0.78rem', color: 'var(--apple-secondary)' }}
-              onClick={handleResetDemo}
-              title="Reset all products and orders to a clean demo slate"
-            >
-              Reset Demo
-            </button>
-            <button className="btn btn-secondary" style={{ padding: '6px 14px' }} onClick={() => navigate('/')}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <button className="btn btn-secondary" style={{ padding: '7px 16px' }} onClick={() => navigate('/')}>
               <ExternalLink size={14} /> Storefront
             </button>
             <button
               className="btn btn-secondary"
-              style={{ padding: '6px 12px', color: 'var(--apple-secondary)' }}
+              style={{ padding: '7px 14px' }}
               onClick={() => {
                 logout();
                 navigate('/login');

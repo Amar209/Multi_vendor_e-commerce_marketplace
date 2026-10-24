@@ -1,0 +1,51 @@
+name: MarketPulse CI Pipeline
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  validate-and-test:
+    runs-on: ubuntu-latest
+
+    services:
+      mongodb:
+        image: mongo:7.0
+        ports:
+          - 27017:27017
+      redis:
+        image: redis:7.2-alpine
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Server Dependencies
+        run: npm --prefix server ci
+
+      - name: Install Client Dependencies
+        run: npm --prefix client ci
+
+      - name: Run Backend API Test Suite
+        env:
+          PORT: 5000
+          MONGO_URI: mongodb://localhost:27017/multi_vendor_marketplace
+          REDIS_URL: redis://localhost:6379
+          JWT_SECRET: ci_test_jwt_secret_key_2026
+        run: |
+          npm --prefix server run dev &
+          sleep 4
+          npm --prefix server test
+
+      - name: Build Frontend Client Bundle
+        run: npm --prefix client run build

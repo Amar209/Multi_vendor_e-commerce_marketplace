@@ -6,6 +6,7 @@ const router = express.Router();
 
 router.get('/', getActiveCoupons);
 router.post('/validate', validateCoupon);
+router.post('/apply', validateCoupon);
 router.post('/', protect, authorize('admin', 'vendor'), createCoupon);
 
 export default router;

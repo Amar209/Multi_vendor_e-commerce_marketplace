@@ -7,7 +7,9 @@
     "dev:client": "npm --prefix client run dev",
     "seed": "npm --prefix server run seed",
     "start": "npm --prefix server start",
-    "build:client": "npm --prefix client run build"
+    "test": "npm --prefix server test",
+    "build:client": "npm --prefix client run build",
+    "build": "npm --prefix client run build"
   },
   "keywords": [
     "multi-vendor",

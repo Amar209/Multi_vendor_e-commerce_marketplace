@@ -55,24 +55,7 @@ export default function AdminPortal() {
       return;
     }
     loadAdminData();
-
-    // Auto-sync real-time telemetry every 3.5 seconds
-    const interval = setInterval(() => {
-      loadAdminData();
-    }, 3500);
-
-    return () => clearInterval(interval);
   }, [token]);
-
-  const handleResetDemo = async () => {
-    if (!window.confirm('Reset marketplace to clean slate (0 products, 0 orders)?')) return;
-    try {
-      await fetch('/api/auth/reset-clean', { method: 'POST' });
-      await loadAdminData(true);
-    } catch (e) {
-      console.error(e);
-    }
-  };
 
   const formatPaymentBadge = (provider) => {
     switch (provider) {
@@ -125,59 +108,14 @@ export default function AdminPortal() {
             </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            {/* Live Telemetry Active Pulse */}
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 7,
-                padding: '4px 10px',
-                background: 'rgba(48, 209, 88, 0.08)',
-                border: '1px solid rgba(48, 209, 88, 0.25)',
-                borderRadius: 20,
-                fontSize: '0.74rem',
-                color: 'var(--apple-green)',
-                fontWeight: 500
-              }}
-            >
-              <span
-                style={{
-                  width: 7,
-                  height: 7,
-                  borderRadius: '50%',
-                  background: 'var(--apple-green)',
-                  animation: 'livePulse 2s infinite'
-                }}
-              />
-              <span>Live Sync Active</span>
-            </div>
-
-            <button
-              className="btn btn-secondary"
-              style={{ padding: '6px 12px', fontSize: '0.78rem' }}
-              onClick={() => loadAdminData(true)}
-              title="Manual Real-Time Telemetry Refresh"
-            >
-              <RefreshCw size={12} className={isRefreshing ? 'spin-anim' : ''} /> Sync
-            </button>
-
-            <button
-              className="btn btn-secondary"
-              style={{ padding: '6px 12px', fontSize: '0.78rem', color: 'var(--apple-secondary)' }}
-              onClick={handleResetDemo}
-              title="Reset all products and orders to a clean demo slate"
-            >
-              <RotateCcw size={13} /> Reset Demo
-            </button>
-
-            <button className="btn btn-secondary" style={{ padding: '6px 14px' }} onClick={() => navigate('/')}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <button className="btn btn-secondary" style={{ padding: '7px 16px' }} onClick={() => navigate('/')}>
               <ExternalLink size={14} /> Public Storefront
             </button>
 
             <button
               className="btn btn-secondary"
-              style={{ padding: '6px 12px', color: 'var(--apple-secondary)' }}
+              style={{ padding: '7px 14px' }}
               onClick={() => {
                 logout();
                 navigate('/login');
@@ -191,18 +129,13 @@ export default function AdminPortal() {
 
       {/* Main Content */}
       <main className="main-wrapper" style={{ maxWidth: 1240, flex: 1 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 32 }}>
-          <div>
-            <h1 style={{ fontSize: '2rem', fontWeight: 600, letterSpacing: '-0.025em', marginBottom: 4 }}>
-              Platform Revenue & Telemetry
-            </h1>
-            <p style={{ color: 'var(--apple-secondary)', fontSize: '0.86rem' }}>
-              Real-time multi-vendor Gross Merchandise Value (GMV), 10% platform commission retention, and merchant remittances.
-            </p>
-          </div>
-          <div style={{ fontSize: '0.76rem', color: 'var(--apple-tertiary)' }}>
-            Updated: {lastSyncedTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-          </div>
+        <div style={{ marginBottom: 32 }}>
+          <h1 style={{ fontSize: '2.2rem', fontWeight: 800, letterSpacing: '-0.025em', marginBottom: 6, color: '#0f172a' }}>
+            Platform Financial Overview
+          </h1>
+          <p style={{ color: 'var(--apple-secondary)', fontSize: '0.92rem' }}>
+            Multi-vendor Gross Merchandise Value (GMV), 10% platform commission retention, and merchant remittances.
+          </p>
         </div>
 
         {/* Master Metrics Grid */}
