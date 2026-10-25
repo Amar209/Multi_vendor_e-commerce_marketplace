@@ -114,23 +114,22 @@ const PORT = process.env.PORT || 5000;
 
 // Initialize core infrastructure and listen
 const startServer = async () => {
-  try {
-    await connectDB();
-    const { autoSeedIfEmpty } = await import('./utils/autoSeed.js');
-    await autoSeedIfEmpty();
-    initRedis();
-    await initElasticsearch();
+  app.listen(PORT, '0.0.0.0', async () => {
+    console.log(`\n======================================================`);
+    console.log(`🚀 Multi-Vendor Marketplace API Server running on port ${PORT}`);
+    console.log(`📡 Healthcheck: http://localhost:${PORT}/api/health`);
+    console.log(`======================================================\n`);
 
-    app.listen(PORT, '0.0.0.0', () => {
-      console.log(`\n======================================================`);
-      console.log(`🚀 Multi-Vendor Marketplace API Server running on port ${PORT}`);
-      console.log(`📡 Healthcheck: http://localhost:${PORT}/api/health`);
-      console.log(`======================================================\n`);
-    });
-  } catch (error) {
-    console.error(`Failed to start server: ${error.message}`);
-    process.exit(1);
-  }
+    try {
+      await connectDB();
+      const { autoSeedIfEmpty } = await import('./utils/autoSeed.js');
+      await autoSeedIfEmpty();
+      initRedis();
+      await initElasticsearch();
+    } catch (error) {
+      console.error(`[Startup Error] ${error.message}`);
+    }
+  });
 };
 
 startServer();
