@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { apiUrl } from '../utils/api';
 import { Layers, Store, ShieldCheck, User, Lock, Mail, ArrowRight, Sparkles, Phone, Building2 } from 'lucide-react';
 
 export default function LoginPage() {
@@ -53,7 +54,7 @@ export default function LoginPage() {
         }
       } else {
         // Registration / Merchant Onboarding
-        const res = await fetch('/api/auth/register', {
+        const res = await fetch(apiUrl('/api/auth/register'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { apiUrl } from '../utils/api';
 import {
   Store,
   IndianRupee,
@@ -66,9 +67,9 @@ export default function VendorPortal() {
     try {
       const headers = { Authorization: `Bearer ${token}` };
       const [prodRes, orderRes, analyticsRes] = await Promise.all([
-        fetch('/api/products/vendor/mine', { headers }),
-        fetch('/api/orders/vendor/incoming', { headers }),
-        fetch('/api/analytics/vendor', { headers })
+        fetch(apiUrl('/api/products/vendor/mine'), { headers }),
+        fetch(apiUrl('/api/orders/vendor/incoming'), { headers }),
+        fetch(apiUrl('/api/analytics/vendor'), { headers })
       ]);
 
       const [prods, ords, anl] = await Promise.all([
@@ -157,7 +158,7 @@ export default function VendorPortal() {
 
     try {
       let activeToken = token || localStorage.getItem('token');
-      let res = await fetch('/api/products', {
+      let res = await fetch(apiUrl('/api/products'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -180,7 +181,7 @@ export default function VendorPortal() {
         const relogin = await login('tech@vendor.com', 'password123');
         if (relogin.success) {
           activeToken = localStorage.getItem('token');
-          res = await fetch('/api/products', {
+          res = await fetch(apiUrl('/api/products'), {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -230,7 +231,7 @@ export default function VendorPortal() {
 
   const advanceFulfillment = async (orderId, itemId, nextStatus) => {
     try {
-      const res = await fetch(`/api/orders/${orderId}/items/${itemId}/status`, {
+      const res = await fetch(apiUrl(`/api/orders/${orderId}/items/${itemId}/status`), {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -250,7 +251,7 @@ export default function VendorPortal() {
   const handleDeleteProduct = async (id) => {
     if (!window.confirm('Remove this product listing?')) return;
     try {
-      const res = await fetch(`/api/products/${id}`, {
+      const res = await fetch(apiUrl(`/api/products/${id}`), {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -282,7 +283,7 @@ export default function VendorPortal() {
     setIsUpdating(true);
     setUpdateError('');
     try {
-      const res = await fetch(`/api/products/${editingProduct._id}`, {
+      const res = await fetch(apiUrl(`/api/products/${editingProduct._id}`), {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -315,7 +316,7 @@ export default function VendorPortal() {
   const handleResetDemo = async () => {
     if (!window.confirm('Reset marketplace to clean slate (0 products, 0 orders)?')) return;
     try {
-      await fetch('/api/auth/reset-clean', { method: 'POST' });
+      await fetch(apiUrl('/api/auth/reset-clean'), { method: 'POST' });
       await loadData();
     } catch (e) {
       console.error(e);

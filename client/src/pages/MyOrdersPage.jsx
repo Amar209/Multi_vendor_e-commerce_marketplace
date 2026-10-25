@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { apiUrl } from '../utils/api';
 import { FileText, ArrowLeft, Package, Layers } from 'lucide-react';
 
 export default function MyOrdersPage() {
@@ -16,7 +17,7 @@ export default function MyOrdersPage() {
     }
     const fetchOrders = async () => {
       try {
-        const res = await fetch('/api/orders/my-orders', {
+        const res = await fetch(apiUrl('/api/orders/my-orders'), {
           headers: { Authorization: `Bearer ${token}` }
         });
         const data = await res.json();
@@ -87,7 +88,7 @@ export default function MyOrdersPage() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <span className="badge badge-green">{order.orderStatus.toUpperCase()}</span>
                     <a
-                      href={`/api/orders/${order._id}/invoice`}
+                      href={apiUrl(`/api/orders/${order._id}/invoice`)}
                       target="_blank"
                       rel="noreferrer"
                       className="btn btn-secondary"

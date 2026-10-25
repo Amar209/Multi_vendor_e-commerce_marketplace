@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { apiUrl } from '../utils/api';
 import {
   ShoppingBag,
   Search,
@@ -144,7 +145,7 @@ export default function Storefront() {
       if (category) params.append('category', category);
       if (sort) params.append('sort', sort);
 
-      const res = await fetch(`/api/products?${params.toString()}`);
+      const res = await fetch(apiUrl(`/api/products?${params.toString()}`));
       const data = await res.json();
       if (data.success) {
         setProducts(data.data || []);
@@ -161,7 +162,7 @@ export default function Storefront() {
   const fetchProductReviews = async (productId) => {
     setLoadingReviews(true);
     try {
-      const res = await fetch(`/api/products/${productId}/reviews`);
+      const res = await fetch(apiUrl(`/api/products/${productId}/reviews`));
       const data = await res.json();
       if (data.success) {
         setProductReviews(data.data || []);
@@ -194,7 +195,7 @@ export default function Storefront() {
     setReviewSubmitting(true);
     setReviewMessage({ text: '', type: '' });
     try {
-      const res = await fetch(`/api/products/${selectedProduct._id}/reviews`, {
+      const res = await fetch(apiUrl(`/api/products/${selectedProduct._id}/reviews`), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -238,7 +239,7 @@ export default function Storefront() {
     setCouponError('');
     setIsApplyingCoupon(true);
     try {
-      const res = await fetch('/api/coupons/validate', {
+      const res = await fetch(apiUrl('/api/coupons/validate'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ code, subtotal: cart.subtotal })
@@ -278,7 +279,7 @@ export default function Storefront() {
   const fetchCart = async () => {
     try {
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
-      const res = await fetch('/api/cart', { headers });
+      const res = await fetch(apiUrl('/api/cart'), { headers });
       const data = await res.json();
       if (data.success) {
         setCart(data.data);
@@ -315,7 +316,7 @@ export default function Storefront() {
       const headers = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
 
-      const res = await fetch('/api/cart', {
+      const res = await fetch(apiUrl('/api/cart'), {
         method: 'POST',
         headers,
         body: JSON.stringify({ productId: product._id, quantity: 1 })
@@ -350,7 +351,7 @@ export default function Storefront() {
       const headers = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
 
-      await fetch(`/api/cart/${productId}`, {
+      await fetch(apiUrl(`/api/cart/${productId}`), {
         method: 'PUT',
         headers,
         body: JSON.stringify({ quantity: newQuantity })
@@ -364,7 +365,7 @@ export default function Storefront() {
   const handleRemoveFromCart = async (productId) => {
     try {
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
-      await fetch(`/api/cart/${productId}`, {
+      await fetch(apiUrl(`/api/cart/${productId}`), {
         method: 'DELETE',
         headers
       });
@@ -444,7 +445,7 @@ export default function Storefront() {
         quantity: item.quantity
       }));
 
-      const res = await fetch('/api/orders', {
+      const res = await fetch(apiUrl('/api/orders'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1420,7 +1421,7 @@ export default function Storefront() {
 
                 <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
                   <a
-                    href={`/api/orders/${completedOrder._id}/invoice`}
+                    href={apiUrl(`/api/orders/${completedOrder._id}/invoice`)}
                     target="_blank"
                     rel="noreferrer"
                     className="btn btn-secondary"

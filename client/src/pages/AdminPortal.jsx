@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { apiUrl } from '../utils/api';
 import {
   ShieldCheck,
   TrendingUp,
@@ -33,7 +34,7 @@ export default function AdminPortal() {
   const loadAdminData = async (manual = false) => {
     if (manual) setIsRefreshing(true);
     try {
-      const res = await fetch('/api/analytics/admin', {
+      const res = await fetch(apiUrl('/api/analytics/admin'), {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
@@ -268,7 +269,7 @@ export default function AdminPortal() {
                       </td>
                       <td>
                         <a
-                          href={`/api/orders/${o._id}/invoice`}
+                          href={apiUrl(`/api/orders/${o._id}/invoice`)}
                           target="_blank"
                           rel="noreferrer"
                           className="btn btn-secondary"
