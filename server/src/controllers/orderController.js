@@ -86,6 +86,33 @@ export const createOrder = async (req, res) => {
 
     const orderNumber = `ORD-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`;
 
+    let paymentIntentId = `pi_test_${Date.now()}`;
+
+    // Real Stripe Integration if API key is provided
+    const stripeKey = process.env.STRIPE_SECRET_KEY;
+    if (stripeKey && stripeKey.startsWith('sk_') && !stripeKey.includes('mock')) {
+      try {
+        const Stripe = (await import('stripe')).default;
+        const stripe = new Stripe(stripeKey);
+        const paymentIntent = await stripe.paymentIntents.create({
+          amount: Math.round(totalAmount * 100),
+          currency: 'inr',
+          description: `MarketPulse Multi-Vendor Order ${orderNumber}`,
+          payment_method_types: ['card'],
+          metadata: {
+            orderNumber,
+            customerName: req.user?.name || 'Customer',
+            customerEmail: req.user?.email || '',
+            platformCommission: String(commissionTotal)
+          }
+        });
+        paymentIntentId = paymentIntent.id;
+        console.log(`[Stripe] Real Stripe PaymentIntent created: ${paymentIntent.id} (₹${totalAmount})`);
+      } catch (stripeErr) {
+        console.warn(`[Stripe Integration Notice] ${stripeErr.message}`);
+      }
+    }
+
     // Create Order in DB
     const order = await Order.create({
       customer: req.user._id,
@@ -100,7 +127,7 @@ export const createOrder = async (req, res) => {
       },
       paymentInfo: {
         provider: paymentMethod,
-        paymentIntentId: `pi_test_${Date.now()}`,
+        paymentIntentId,
         status: 'paid'
       },
       subtotal,
