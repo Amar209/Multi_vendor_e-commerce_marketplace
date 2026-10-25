@@ -121,7 +121,7 @@ const startServer = async () => {
     initRedis();
     await initElasticsearch();
 
-    app.listen(PORT, () => {
+    app.listen(PORT, '0.0.0.0', () => {
       console.log(`\n======================================================`);
       console.log(`🚀 Multi-Vendor Marketplace API Server running on port ${PORT}`);
       console.log(`📡 Healthcheck: http://localhost:${PORT}/api/health`);
